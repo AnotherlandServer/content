@@ -6,7 +6,7 @@
 local OBJECT_CLASS_SETUP = {}
 
 function SCRIPT:Attach()
-    Log.Info("Attaching to '" .. self.name .. "' of class '" .. self.class .. "'")
+    Log.Trace("Attaching to '" .. self.name .. "' of class '" .. self.class .. "'")
 
     -- Run class dependent setup function
     if OBJECT_CLASS_SETUP[self.class] then

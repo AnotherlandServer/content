@@ -6,7 +6,9 @@
 NPC.based_on = "_script"
 
 function NPC:Init()
-    self:AddBehavior("dovendorexecute", self.DoVendorExecute)
+    if string.find(self:Get("defb"), "OLNpcVendorCC") then
+        self:AddBehavior("dovendorexecute", self.DoVendorExecute)
+    end
 end
 
 ---MetaMorph vendor execute
