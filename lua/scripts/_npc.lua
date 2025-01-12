@@ -46,6 +46,14 @@ function NPC:DoVendorExecute(player, ...)
     player:Set("customizationCheek", params[26])
     player:Set("customizationChinPortude", params[27])
     player:Set("customizationJawChubby", params[28])
+end
 
+function NPC:RequestDialogue(player)
+    -- This is a super basic default implementation for just displaying the dialog that's 
+    -- defined for the npc.
+    local dialog_id = self:Get("Dialogs")[0];
 
+    if dialog_id ~= nil then
+        player:ShowDialogue(self, dialog_id)
+    end
 end
