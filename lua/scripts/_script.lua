@@ -44,6 +44,13 @@ end
 function Trigger_Setup(instance)
     if instance.TriggerAction then
         instance:AddBehavior("triggeraction", instance.TriggerAction)
+    elseif instance.TriggerOnce then
+        instance:AddBehavior("triggeraction", function (trigger, player)
+            if not trigger._FIRED then
+                trigger:TriggerOnce(player)
+                trigger._FIRED = true
+            end
+        end)
     end
 end
 
