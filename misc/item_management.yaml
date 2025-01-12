@@ -1,0 +1,446 @@
+slotTypes:
+  - name: Body
+    totalSlots: 26
+  - name: Weapon
+    totalSlots: 3
+  - name: QBoost
+    totalSlots: 1
+  - name: Power
+    totalSlots: 10
+  - name: Hidden
+    totalSlots: 1
+equipmentTypes:
+  - name: CharSkin
+    slotType: Body
+    slots: 0
+    teRatio: 0.0
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharFace
+    slotType: Body
+    slots: 1
+    teRatio: 0.0
+    weight: 0.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharSkinColor
+    slotType: Body
+    slots: 2
+    teRatio: 0.0
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharEyeColor
+    slotType: Body
+    slots: 3
+    teRatio: 0.0
+    weight: 0.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharLipColor
+    slotType: Body
+    slots: 4
+    teRatio: 0.0
+    weight: 0.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharHairColor
+    slotType: Body
+    slots: 5
+    teRatio: 0.0
+    weight: 0.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharDecal1
+    slotType: Body
+    slots: 6
+    teRatio: 0.02
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: CharDecal2
+    slotType: Body
+    slots: 7
+    teRatio: 0.02
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: HeadWear
+    slotType: Body
+    slots: 8
+    teRatio: 0.05
+    weight: 0.75
+    group: Head
+    tickOrder: 2
+    isBaseAppearance: false
+  - name: HeadFloating
+    slotType: Body
+    slots: 9
+    teRatio: 0.02
+    weight: 0.45
+    group: Head
+    tickOrder: 3
+    isBaseAppearance: false
+  - name: UpperFace
+    slotType: Body
+    slots: 10
+    teRatio: 0.015
+    weight: 0.25
+    group: Head
+    tickOrder: 4
+    isBaseAppearance: false
+  - name: LowerFace
+    slotType: Body
+    slots: 11
+    teRatio: 0.015
+    weight: 0.25
+    group: Head
+    tickOrder: 5
+    isBaseAppearance: false
+  - name: ChestSkin
+    slotType: Body
+    slots: 12
+    teRatio: 0.0
+    weight: 0.45
+    group: Torso
+    tickOrder: 6
+    isBaseAppearance: false
+  - name: ChestWorn
+    slotType: Body
+    slots: 13
+    teRatio: 0.1
+    weight: 1.0
+    group: Torso
+    tickOrder: 7
+    isBaseAppearance: false
+  - name: Shoulders
+    slotType: Body
+    slots: 14
+    teRatio: 0.03
+    weight: 0.75
+    group: Torso
+    tickOrder: 8
+    isBaseAppearance: false
+  - name: BackFloating
+    slotType: Body
+    slots: 15
+    teRatio: 0.02
+    weight: 0.55
+    group: Torso
+    tickOrder: 9
+    isBaseAppearance: false
+  - name: Hands
+    slotType: Body
+    slots: 16
+    teRatio: 0.04
+    weight: 0.5
+    group: Torso
+    tickOrder: 10
+    isBaseAppearance: false
+  - name: LegsSkin
+    slotType: Body
+    slots: 17
+    teRatio: 0.0
+    weight: 0.0
+    group: Legs
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: LegsWorn
+    slotType: Body
+    slots: 18
+    teRatio: 0.08
+    weight: 1.0
+    group: Legs
+    tickOrder: 11
+    isBaseAppearance: false
+  - name: Feet
+    slotType: Body
+    slots: 19
+    teRatio: 0.04
+    weight: 0.5
+    group: Legs
+    tickOrder: 12
+    isBaseAppearance: false
+  - name: Agm_DataCap
+    slotType: Body
+    slots: 20
+    teRatio: 0.02
+    weight: 0.4
+    group: Head
+    tickOrder: 13
+    isBaseAppearance: false
+  - name: Agm_ProcLink
+    slotType: Body
+    slots: 21
+    teRatio: 0.02
+    weight: 0.4
+    group: Torso
+    tickOrder: 14
+    isBaseAppearance: false
+  - name: Agm_BridgeCirc
+    slotType: Body
+    slots: 22
+    teRatio: 0.02
+    weight: 0.4
+    group: Head
+    tickOrder: 15
+    isBaseAppearance: false
+  - name: PassiveFx
+    slotType: Body
+    slots: 23
+    teRatio: 0.0
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: Faction
+    slotType: Body
+    slots: 24
+    teRatio: 0.04
+    weight: 0.1
+    group: Torso
+    tickOrder: 11
+    isBaseAppearance: false
+  - name: FullFace
+    slotType: Body
+    slots:
+    - 10
+    - 11
+    teRatio: 0.03
+    weight: 0.5
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: HeadWearFullHead
+    slotType: Body
+    slots:
+    - 8
+    - 10
+    - 11
+    teRatio: 0.08
+    weight: 1.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: HeadWearUpperFace
+    slotType: Body
+    slots:
+    - 8
+    - 10
+    teRatio: 0.065
+    weight: 1.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyDress
+    slotType: Body
+    slots:
+    - 13
+    - 18
+    teRatio: 0.18
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyDressSkin
+    slotType: Body
+    slots:
+    - 12
+    - 13
+    - 18
+    teRatio: 0.18
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: ChestWornSkin
+    slotType: Body
+    slots:
+    - 12
+    - 13
+    teRatio: 0.1
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyUpper
+    slotType: Body
+    slots:
+    - 13
+    - 16
+    teRatio: 0.14
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyLower
+    slotType: Body
+    slots:
+    - 18
+    - 19
+    teRatio: 0.12
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyUpperLower
+    slotType: Body
+    slots:
+    - 13
+    - 16
+    - 18
+    - 19
+    teRatio: 0.26
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyDressFeet
+    slotType: Body
+    slots:
+    - 13
+    - 18
+    - 19
+    teRatio: 0.22
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyDressFeetSkin
+    slotType: Body
+    slots:
+    - 12
+    - 13
+    - 18
+    - 19
+    teRatio: 0.22
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyFullMorph
+    slotType: Body
+    slots:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 18
+    - 19
+    teRatio: 0.51
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: Legs
+    slotType: Body
+    slots: 18
+    teRatio: 0.08
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: HeadWearLowerFace
+    slotType: Body
+    slots:
+    - 8
+    - 11
+    teRatio: 0.065
+    weight: 1.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyUpperSkin
+    slotType: Body
+    slots:
+    - 12
+    - 13
+    - 16
+    teRatio: 0.14
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: BodyUpperLowerSkin
+    slotType: Body
+    slots:
+    - 12
+    - 13
+    - 16
+    - 18
+    - 19
+    teRatio: 0.26
+    weight: 1.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: Hair
+    slotType: Body
+    slots: 25
+    teRatio: 0.0
+    weight: 0.0
+    group: Body
+    tickOrder: -1
+    isBaseAppearance: true
+  - name: Weapon
+    slotType: Weapon
+    slots: -1
+    teRatio: 0.2
+    weight: 1.0
+    group: .nan
+    tickOrder: 1
+    isBaseAppearance: false
+  - name: Power
+    slotType: Power
+    slots: -1
+    teRatio: 0.0
+    weight: 0.0
+    group: .nan
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: QBoost
+    slotType: QBoost
+    slots: -1
+    teRatio: 0.0
+    weight: 0.0
+    group: .nan
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: Hidden
+    slotType: Hidden
+    slots: -1
+    teRatio: 0.0
+    weight: 0.0
+    group: .nan
+    tickOrder: -1
+    isBaseAppearance: false
+  - name: FacialHair
+    slotType: Body
+    slots: 11
+    teRatio: 0.0
+    weight: 0.0
+    group: Head
+    tickOrder: -1
+    isBaseAppearance: true
