@@ -5,7 +5,4 @@
 
 function SCRIPT:TriggerAction(player)
     player:Reset("combatStyle")
-    player:Reset("classData")
-    player:Reset("currentClassSkills")
-    player:Reset("heavySpecialSkillData")
 end
