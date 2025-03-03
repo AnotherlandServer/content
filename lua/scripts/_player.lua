@@ -10,6 +10,8 @@ function PLAYER:Init()
 end
 
 function PLAYER:Behavior_RequestSelectWeapon(player, id)
-    Log.Debug("Requesting weapon selection for player " .. self.name .. " - " .. id)
-    self:Set("weapon", { id, "00000000-0000-0000-0000-000000000000" })
+    if id ~= nil then
+        Log.Debug("Requesting weapon selection for player " .. self.name .. " - " .. id)
+        self:Set("weapon", { id, "00000000-0000-0000-0000-000000000000" })
+    end
 end
