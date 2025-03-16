@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+$schema: https://json-schema.org/draft/2020-12/schema
+title: "Stances and Skills Schema"
+type: object
+
+properties:
+  stances:
+    type: array
+    description: "List of stance names."
+    items:
+      type: string
+
+  skills:
+    type: array
+    description: "List of skill entries."
+    items:
+      type: object
+      properties:
+        ability:
+          type: string
+          description: "Name of the ability."
+
+        group:
+          type: string
+          description: "Name of the group this ability belongs to."
+
+        level:
+          type: integer
+          description: "The level requirement for this skill."
+
+        upgrade_cost:
+          type: integer
+          description: "The cost to upgrade this skill."
+
+        enabled:
+          type: boolean
+          description: "Whether this skill is enabled or not."
+
+        stance:
+          type: integer
+          description: "Stance this skill is available for."
+
+      required:
+        - ability
+        - group
+        - level
+        - upgrade_cost
+        - enabled
+        - stance
+
+required:
+  - stances
+  - skills

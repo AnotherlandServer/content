@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=../otherland.combat_style.schema.yaml
+stances:
+  - "PrimeKiller"
+  - "PrimeDefender"
+skills:
+  - ability: "All_ClassAbility_SitAndHeal"
+    group: "Recuperate"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "Assassin_Class_Stealth_Rank1"
+    group: "Stealth"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "Assassin_Class_PrimeKiller_Rank1"
+    group: "PrimeKillerNew"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Assassin_DPS_VenomStrike"
+    group: "ClassAbilities_New_Assassin_DPS_VenomStrike"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Assassin_DPS_PoisonVial"
+    group: "ClassAbilities_New_Assassin_DPS_PoisonVial"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Assassin_DPS_Break"
+    group: "ClassAbilities_New_Assassin_DPS_Break"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Assassin_DPS_VileGround"
+    group: "ClassAbilities_New_Assassin_DPS_VileGround"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Assassin_DPS_Unleash"
+    group: "ClassAbilities_New_Assassin_DPS_Unleash"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 0
+  - ability: "Assassin_Class_PrimeDefender_Rank1"
+    group: "PrimeDefenderNew"
+    level: 5
+    upgrade_cost: 165
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Assassin_Tank_Taunt"
+    group: "ClassAbilities_New_Assassin_Tank_Taunt"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Assassin_Tank_Obliterate"
+    group: "ClassAbilities_New_Assassin_Tank_Obliterate"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Assassin_Tank_WickedHeart"
+    group: "ClassAbilities_New_Assassin_Tank_WickedHeart"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Assassin_Tank_EscapeArtist"
+    group: "ClassAbilities_New_Assassin_Tank_EscapeArtist"
+    level: 45
+    upgrade_cost: 675
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Assassin_Tank_RazorField"
+    group: "ClassAbilities_New_Assassin_Tank_RazorField"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 1

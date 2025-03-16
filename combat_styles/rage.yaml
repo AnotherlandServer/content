@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../otherland.combat_style.schema.yaml
+stances:
+  - "PrimeChampion"
+  - "PrimeTarget"
+skills:
+  - ability: "All_ClassAbility_SitAndHeal"
+    group: "Recuperate"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "Rage_Class_PrimeChampion_Rank1"
+    group: "PrimeChampionNew"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Warrior_Damage_RawPower"
+    group: "ClassAbilities_New_Warrior_Damage_RawPower"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Warrior_Damage_BloodStorm"
+    group: "ClassAbilities_New_Warrior_Damage_BloodStorm"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Warrior_Damage_Rampage"
+    group: "ClassAbilities_New_Warrior_Damage_Rampage"
+    level: 15
+    upgrade_cost: 225
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Warrior_Damage_Bane"
+    group: "ClassAbilities_New_Warrior_Damage_Bane"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Warrior_Damage_Banish"
+    group: "ClassAbilities_New_Warrior_Damage_Banish"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Warrior_Damage_SanguineCurse"
+    group: "ClassAbilities_New_Warrior_Damage_SanguineCurse"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 0
+  - ability: "Rage_Class_PrimeGuardian_Rank1"
+    group: "PrimeGuardianNew"
+    level: 5
+    upgrade_cost: 165
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Warrior_Tank_Dash"
+    group: "ClassAbilities_New_Warrior_Tank_Dash"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Warrior_Tank_Taunt"
+    group: "ClassAbilities_New_Warrior_Tank_Taunt"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Warrior_Tank_VitalitySlash"
+    group: "ClassAbilities_New_Warrior_Tank_VitalitySlash"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Warrior_Tank_Impulse"
+    group: "ClassAbilities_New_Warrior_Tank_Impulse"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Warrior_Tank_EssenceTouch"
+    group: "ClassAbilities_New_Warrior_Tank_EssenceTouch"
+    level: 45
+    upgrade_cost: 675
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Warrior_Tank_Presage"
+    group: "ClassAbilities_New_Warrior_Tank_Presage"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 1

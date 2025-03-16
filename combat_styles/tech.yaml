@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../otherland.combat_style.schema.yaml
+stances:
+  - "PrimeShot"
+  - "PrimeAdherent"
+skills:
+  - ability: "All_ClassAbility_SitAndHeal"
+    group: "Recuperate"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "Gunner_Class_PrimeShot_Rank1"
+    group: "PrimeShot_New"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Marksman_Damage_Debug"
+    group: "ClassAbilities_New_Marksman_Damage_Debug"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Marksman_Damage_Capacitate"
+    group: "ClassAbilities_New_Marksman_Damage_Capacitate"
+    level: 15
+    upgrade_cost: 225
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Marksman_Damage_Lethargy"
+    group: "ClassAbilities_New_Marksman_Damage_Lethargy"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Marksman_Damage_Entrenche"
+    group: "ClassAbilities_New_Marksman_Damage_Entrenche"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Marksman_Damage_CodeExpansion"
+    group: "ClassAbilities_New_Marksman_Damage_CodeExpansion"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Marksman_Damage_Stimulate"
+    group: "ClassAbilities_New_Marksman_Damage_Stimulate"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 0
+  - ability: "Gunner_Class_PrimeAdherent_Rank1"
+    group: "PrimeAdherent_New"
+    level: 5
+    upgrade_cost: 165
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Marksman_Heal_Alleviate"
+    group: "ClassAbilities_New_Marksman_Heal_Alleviate"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Marksman_Heal_Regenerate"
+    group: "ClassAbilities_New_Marksman_Heal_Regenerate"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Marksman_Heal_Rebuild"
+    group: "ClassAbilities_New_Marksman_Heal_Rebuild"
+    level: 15
+    upgrade_cost: 225
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Marksman_Heal_MendingField"
+    group: "ClassAbilities_New_Marksman_Heal_MendingField"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Marksman_Heal_Revivify"
+    group: "ClassAbilities_New_Marksman_Heal_Revivify"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Marksman_Heal_Triage"
+    group: "ClassAbilities_New_Marksman_Heal_Triage"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 1

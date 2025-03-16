@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=../otherland.combat_style.schema.yaml
+stances:
+  - "PrimeJuicer"
+  - "PrimeSpecialist"
+skills:
+  - ability: "All_ClassAbility_SitAndHeal"
+    group: "Recuperate"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "Energizer_Class_PrimeJuicer_Rank1"
+    group: "PrimeJuicerNew"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Energizer_Damage_StickyCapacitor"
+    group: "ClassAbilities_New_Energizer_Damage_StickyCapacitor"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Energizer_Damage_Disconnect"
+    group: "ClassAbilities_New_Energizer_Damage_Disconnect"
+    level: 1
+    upgrade_cost: 0
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Energizer_Damage_ChargeUp"
+    group: "ClassAbilities_New_Energizer_Damage_ChargeUp"
+    level: 15
+    upgrade_cost: 225
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Energizer_Damage_CloseConnection"
+    group: "ClassAbilities_New_Energizer_Damage_CloseConnection"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Energizer_Damage_Ping"
+    group: "ClassAbilities_New_Energizer_Damage_Ping"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 0
+  - ability: "ClassAbilities_New_Energizer_Damage_NetReload"
+    group: "ClassAbilities_New_Energizer_Damage_NetReload"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 0
+  - ability: "Energizer_Class_PrimeSpecialist_Rank1"
+    group: "PrimeSpecialistNew"
+    level: 5
+    upgrade_cost: 165
+    enabled: true
+    stance: -1
+  - ability: "ClassAbilities_New_Energizer_Heal_StickyCapacitor"
+    group: "ClassAbilities_New_Energizer_Heal_StickyCapacitor"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Energizer_Heal_Spark"
+    group: "ClassAbilities_New_Energizer_Heal_Spark"
+    level: 5
+    upgrade_cost: 150
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Energizer_Heal_ReConnect"
+    group: "ClassAbilities_New_Energizer_Heal_ReConnect"
+    level: 25
+    upgrade_cost: 375
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Energizer_Heal_Surge"
+    group: "ClassAbilities_New_Energizer_Heal_Surge"
+    level: 35
+    upgrade_cost: 525
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Energizer_Heal_NodeRecharge"
+    group: "ClassAbilities_New_Energizer_Heal_NodeRecharge"
+    level: 45
+    upgrade_cost: 675
+    enabled: true
+    stance: 1
+  - ability: "ClassAbilities_New_Energizer_Heal_NetImpulse"
+    group: "ClassAbilities_New_Energizer_Heal_NetImpulse"
+    level: 55
+    upgrade_cost: 825
+    enabled: true
+    stance: 1
