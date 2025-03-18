@@ -3,18 +3,16 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
-NPC.based_on = "_script"
+local Class = require("core.class")
+local NonClientBase = require("global.base.non_client_base")
 
-function NPC:Init()
-    if string.find(self:Get("defb"), "OLNpcVendorCC") then
-        self:AddBehavior("dovendorexecute", self.DoVendorExecute)
-    end
-end
+---@class Npc: NonClientBase
+local Npc = Class(NonClientBase)
 
 ---MetaMorph vendor execute
 ---@param player Player
 ---@param ... any
-function NPC:DoVendorExecute(player, ...)
+function Npc:DoVendorExecute(player, ...)
     local params = { ... }
 
     -- Apply metamorph customization parameters
@@ -48,7 +46,9 @@ function NPC:DoVendorExecute(player, ...)
     player:Set("customizationJawChubby", params[28])
 end
 
-function NPC:RequestDialogue(player)
+Npc.AddBehavior("dovendorexecute", Npc.DoVendorExecute)
+
+function Npc:RequestDialogue(player)
     -- This is a super basic default implementation for just displaying the dialog that's 
     -- defined for the npc.
     local dialog_id = self:Get("Dialogs")[0];
@@ -57,3 +57,5 @@ function NPC:RequestDialogue(player)
         player:ShowDialogue(self, dialog_id)
     end
 end
+
+return Npc
