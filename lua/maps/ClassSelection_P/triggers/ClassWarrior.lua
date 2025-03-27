@@ -11,3 +11,5 @@ function ClassWarrior:TriggerAction(player)
     player:Set("combatStyle", 0);
     player:Set("lvl", 60);
 end
+
+return ClassWarrior

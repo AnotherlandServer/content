@@ -6,7 +6,7 @@
 local Class = require("core.class")
 local NonClientBase = require("global.base.non_client_base")
 
----@class Npc: NonClientBase
+---@class NpcOtherland: NonClientBase
 local Npc = Class(NonClientBase)
 
 ---MetaMorph vendor execute

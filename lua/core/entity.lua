@@ -4,12 +4,10 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
+local Events = require("core.events")
 
----@class Entity
-local Entity = Class()
-
----@private
-Entity._EVENTS = {}
+---@class Entity: Events
+local Entity = Class(Events)
 
 ---@type string
 Entity.name = nil
@@ -25,30 +23,6 @@ Entity.placement_guid = nil
 
 ---@type string
 Entity.template_guid = nil
-
----Registers a callback function to be executed when a specific event occurs
----@param event string The name of the event to listen for
----@param callback fun(self:Entity, ...:any):any The function to execute when the event is triggered
----@return nil
-function Entity.On(event, callback)
-    if not Entity._EVENTS[event] then
-        Entity._EVENTS[event] = {}
-    end
-
-    table.insert(Entity._EVENTS[event], callback)
-end
-
----Triggers all callbacks registered for a specific event
----@param event string The name of the event to trigger
----@vararg any
----@return nil
-function Entity:Emit(event, ...)
-    if Entity._EVENTS[event] then
-        for _, callback in ipairs(Entity._EVENTS[event]) do
-            callback(self, ...)
-        end
-    end
-end
 
 ---@param key string
 ---@return any
@@ -75,6 +49,8 @@ Entity.Init = nil
 function Entity:Attach()
     Log.Trace("Attaching to '" .. self.name .. "' of class '" .. self.class .. "'")
 
+    self:InitEvents()
+
     if self.Init then
         self:Init()
     end
@@ -82,6 +58,21 @@ end
 
 function Entity:HotReload()
     self:Attach()
+end
+
+---@return Vector
+function Entity:GetPosition()
+    return __engine.movement.GetPosition(self)
+end
+
+---@return Quaternion
+function Entity:GetRotation()
+    return __engine.movement.GetRotation(self)
+end
+
+---@return Vector
+function Entity:GetVelocity()
+    return __engine.movement.GetVelocity(self)
 end
 
 return Entity

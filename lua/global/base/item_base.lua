@@ -4,9 +4,8 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local Events = require("core.game_controller")
 
----@class InstancedBattleground: GameController
-local InstancedBattleground = Class(Events)
+---@class ItemBase: Entity
+local ItemBase = Class(require("core.entity"))
 
-return InstancedBattleground
+return ItemBase

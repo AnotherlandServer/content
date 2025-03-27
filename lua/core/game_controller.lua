@@ -4,10 +4,9 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local Ability = Class(require("core.entity"))
+local Events = require("core.events")
 
-function Ability:Exec(caster, target)
-    Log.Debug("Executing ability")
-end
+---@class GameController: Events
+local GameController = Class(Events)
 
-return Ability
+return GameController

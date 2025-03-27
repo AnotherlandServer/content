@@ -23,4 +23,19 @@ function NonClientBase.AddBehavior(name, callback)
     NonClientBase._BEHAVIOR[name] = callback;
 end
 
+---@return Vector
+function NonClientBase:GetPosition()
+    return __engine.movement.GetPosition(self)
+end
+
+---@return Quaternion
+function NonClientBase:GetRotation()
+    return __engine.movement.GetRotation(self)
+end
+
+---@return Vector
+function NonClientBase:GetVelocity()
+    return __engine.movement.GetVelocity(self)
+end
+
 return NonClientBase

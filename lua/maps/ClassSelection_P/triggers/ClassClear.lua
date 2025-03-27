@@ -10,3 +10,5 @@ local ClassClear = Class(Trigger)
 function ClassClear:TriggerAction(player)
     player:Reset("combatStyle")
 end
+
+return ClassClear
