@@ -285,8 +285,20 @@ function Player:ConsumeCooldown(cooldowns, duration)
     end
 end
 
-function Player:GetInterests()
-    return __engine.interest.GetInterests(self)
+---comment
+---@param other NpcOtherland|Player
+---@return Relationship
+function Player:Relationship(other)
+    local NpcOtherland = require("global.base.npc_otherland")
+
+    -- Todo: Actually check faction standing
+    if other:GetClass() == Player then
+        return 1
+    elseif other:GetClass() == NpcOtherland then
+        return other:Relationship(self)
+    else
+        return 1
+    end
 end
 
 return Player

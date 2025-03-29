@@ -50,7 +50,6 @@ local EventType = {
 ---@field event_type integer
 local AbilityInvocation = {}
 
----comment
 ---@param source Entity
 ---@param ability_type AbilityType
 ---@param event_type EventType
@@ -74,19 +73,26 @@ function AbilityInvocation:New(ability, source, ability_type, event_type)
     return obj
 end
 
+---@param number number
 function AbilityInvocation:SetDuration(number)
     self.event_duration = number
 end
 
+---@param number integer
 function AbilityInvocation:SetPredictionId(number)
     self.prediction_id = number
 end
 
+---@param number integer
 function AbilityInvocation:SetComboStageId(number)
     self.combo_stage_id = number
 end
 
----comment
+---@param rotation Quaternion
+function AbilityInvocation:SetRotation(rotation)
+    self.rotation = rotation
+end
+
 ---@param target Entity
 ---@param amount integer
 ---@param delay? number

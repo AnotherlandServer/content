@@ -115,7 +115,7 @@
 ---@field onlyFromStealth? boolean
 ---@field onUseChance? number
 ---@field initialStackCount? number
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -133,7 +133,7 @@
 ---@field aoeCoefficient? number
 ---@field delay? number
 ---@field children? EffectorDefinition   -- sub-effects triggered after damage
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -145,7 +145,7 @@
 ---@field addProportionOfSourceBaseHP? number
 ---@field damageMult? number
 ---@field children? EffectorDefinition
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -157,7 +157,7 @@
 ---@field attackPowerMod? number
 ---@field useDefaultHealCalculation? boolean
 ---@field children? EffectorDefinition
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -168,7 +168,7 @@
 ---@field weaponDPSMod? number
 ---@field attackPowerMod? number
 ---@field children? EffectorDefinition
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -190,7 +190,7 @@
 ---@field subGroups? string[]      -- e.g. ["Stun","Sleep"]
 ---@field buffGroups? string[]     -- e.g. ["BuffGroup_HackDrives"]
 ---@field children? EffectorDefinition
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -220,7 +220,7 @@
 ---@class Threat
 ---@field threatMod? number
 ---@field taunt? boolean
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -339,7 +339,7 @@
 ---@field proportionOfMax? number
 ---@field minimumInSeconds? number
 ---@field ignoreSkillGroups? string[]  -- e.g. ["SkillGroup_Gunner_Chrono"]
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -361,7 +361,7 @@
 ---@field damageMult? number
 ---@field addProportionOfTargetMaxHP? number
 ---@field isUseSourceLevel? boolean
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
@@ -370,7 +370,7 @@
 ---@class TellBehavior
 ---@field tellSource? string
 ---@field tellTarget? string
----@field targetFactory? TargetFactory
+---@field targetFactory? TargetFactoryDef
 
 
 --------------------------------------------------------------------------------
