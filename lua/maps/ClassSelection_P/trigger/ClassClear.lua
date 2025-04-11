@@ -5,11 +5,10 @@
 
 local Class = require("core.class")
 local Trigger = require("global.base.trigger")
-local ClassWarrior = Class(Trigger)
+local ClassClear = Class(Trigger)
 
-function ClassWarrior:TriggerAction(player)
-    player:Set("combatStyle", 0);
-    player:Set("lvl", 60);
+function ClassClear:TriggerAction(player)
+    player:Set("combatStyle", 0)
 end
 
-return ClassWarrior
+return ClassClear

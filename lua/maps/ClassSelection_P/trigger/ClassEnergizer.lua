@@ -4,9 +4,11 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local Events = require("core.events")
+local Trigger = require("global.base.trigger")
+local ClassEnergizer = Class(Trigger)
 
----@class GameController: Events
-local GameController = Class(Events)
+function ClassEnergizer:TriggerAction(player)
+    player:Set("combatStyle", 3);
+end
 
-return GameController
+return ClassEnergizer

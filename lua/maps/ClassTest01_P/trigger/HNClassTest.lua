@@ -4,9 +4,11 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local Events = require("core.game_controller")
+local Trigger = require("global.base.trigger")
+local ClassWarrior = Class(Trigger)
 
----@class InstanceEmergency: GameController
-local InstanceEmergency = Class(Events)
+function ClassWarrior:TriggerAction(player)
+    player:ShowTutorialMessage(2840)
+end
 
-return InstanceEmergency
+return ClassWarrior

@@ -9,15 +9,17 @@ local NpcOtherland = require("global.base.npc_otherland")
 
 ---@class TargetFactory
 ---@field source Entity
+---@field ability EdnaAbility
 ---@field def TargetFactoryDef
 local TargetFactory = {}
 
 
 ---comment
 ---@param source Entity
+---@param ability EdnaAbility
 ---@param def TargetFactoryDef
 ---@return TargetFactory
-function TargetFactory.New(source, def)
+function TargetFactory.New(source, ability, def)
     local instance = {}
 
     setmetatable(instance, {
@@ -25,6 +27,7 @@ function TargetFactory.New(source, def)
     })
 
     instance.source = source
+    instance.ability = ability
     instance.def = def
 
     return instance
@@ -142,6 +145,25 @@ function TargetFactory:FindTargets_pie(request)
     end
 
     return result
+end
+
+---comment
+---@param request AbilityRequest
+---@return Entity[]
+function TargetFactory:FindTargets_none(request)
+    local range_max = self.ability:Get("RangeMax")
+
+    if request.target == nil then 
+        return {}
+    end
+
+    local distance = (request.target:GetPosition() - self.source:GetPosition())
+
+    if distance:Length() <= range_max then
+        return { [1] = request.target }
+    end
+
+    return {}
 end
 
 return TargetFactory

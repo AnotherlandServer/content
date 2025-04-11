@@ -4,9 +4,11 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local Events = require("core.game_controller")
+local Trigger = require("global.base.trigger")
+local ClassMarksman = Class(Trigger)
 
----@class InstancedBattleground: GameController
-local InstancedBattleground = Class(Events)
+function ClassMarksman:TriggerAction(player)
+    player:Set("combatStyle", 1);
+end
 
-return InstancedBattleground
+return ClassMarksman

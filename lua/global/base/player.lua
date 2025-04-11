@@ -5,8 +5,15 @@
 
 local Class = require("core.class")
 local Entity = require("core.entity")
+local Timer = require("core.timer")
+local AbilityInvocation = require("engine.ability_invocation")
 
 ---@class Player: Entity
+---@field channelAbility? EdnaAbility
+---@field channelRequest? AbilityRequest
+---@field channelTimer? Timer
+---@field executionTimer? Timer
+---@field cancelChannel boolean
 local Player = Class(Entity)
 
 ---@private
@@ -35,6 +42,10 @@ Player.AddBehavior("requestselectweapon", function (self, _, main_hand, off_hand
     self:Emit("OnEquipmentChanged")
 end)
 
+function Player:Init()
+    self.cancelChannel = false
+end
+
 Player:On("OnAbilityRequest", 
     ---comment
     ---@param self Player
@@ -50,6 +61,8 @@ Player:On("OnAbilityRequest",
             Log.Debug("Combo id: " .. request.combo_stage_id)
         end
 
+        Log.Debug("Toggle mode: " .. request.toggle_mode)
+
         if request.reference_id and request.toggle_mode == 1 then 
             local item = self:GetItem(request.reference_id)
             local skill = self:GetSkill(request.reference_id)
@@ -60,16 +73,25 @@ Player:On("OnAbilityRequest",
                     request.item = item
 
                     if item.NormalAttack ~= nil then 
-                        item.NormalAttack:Cast(self, request)
+                        item.NormalAttack:Invoke(self, request)
                     else
                         Log.Warn("No abilities found for item " .. request.reference_id)
                     end
                 end
             elseif skill ~= nil then
-                skill:Cast(self, request)
+                skill:Invoke(self, request)
             end
+        elseif request.toggle_mode == 2 then
+            self:EndChanneling()
         end  
     end)
+
+---comment
+---@param self Player
+Player:On("OnAbilityChannel", function (self)
+
+    end
+)
 
 ---comment
 ---@param self Player
@@ -299,6 +321,108 @@ function Player:Relationship(other)
     else
         return 1
     end
+end
+
+function Player:Spawn()
+    __engine.player.Spawn(self)
+end
+
+function Player:BeginLoadInventory()
+    __engine.inventory.BeginLoadInventory(self)
+end
+
+---
+---@param class_item_name string
+---@param clear_inventory boolean
+---@param callback fun(err?: any)
+function Player:ApplyClassItem(class_item_name, clear_inventory, callback)
+    __engine.player.ApplyClassItem(self, class_item_name, clear_inventory, callback)
+end
+
+---comment
+---@param warm_up_duration number
+---@param ability EdnaAbility
+---@param request AbilityRequest
+function Player:BeginChanneling(warm_up_duration, ability, request)
+    -- Check if we are still executing an ability
+    if self.executionTimer ~= nil then
+        return
+    end
+
+    self:EndChanneling()
+
+    local tickPeriod = ability:Get("TickPeriod")
+    if request.item ~= nil then 
+        tickPeriod = request.item:Get("WepAttSpeed")
+    end 
+
+    if tickPeriod <= 0 then
+        tickPeriod = ability:Get("executionTime")
+    end
+
+    if tickPeriod > 0 then
+        self.channelAbility = ability
+        self.channelRequest = request
+
+        local duration
+        
+        if not ability:Get("ChannelIndefinitely") then
+            duration = ability:Get("ChannelTime")
+        end
+
+        self.executionTimer = Timer:Start(self, ability:Get("executionTime"), 0, function ()
+            self.executionTimer = nil
+
+            if self.cancelChannel then
+                self:EndChanneling()
+            end
+        end)
+
+        self.channelTimer = Timer:Start(self, warm_up_duration, 0, function (timer, stopping)
+            if not self.channelAbility:Channel(self, self.channelRequest) then
+                self:EndChanneling()
+            else
+                self.channelTimer:Stop()
+                self.channelTimer = Timer:Start(self, tickPeriod, duration, function (timer, stopping)
+                    if not self.channelAbility:Channel(self, self.channelRequest) then
+                        self:EndChanneling()
+                    end
+                end)
+            end
+        end)
+    end
+end
+
+function Player:EndChanneling()
+    if self.channelAbility ~= nil then
+        if self.executionTimer == nil then
+            Log.Debug("Ending channeling for player " .. self.name)
+
+            local invocation = AbilityInvocation.New(self.channelAbility, self, "Item", "Cancel")
+            invocation:SetItem(self.channelRequest.item)
+            invocation:SetDuration(self.channelAbility:Get("endStateDuration"))
+            invocation:SetComboStageId(2)
+            --invocation:SetDuration(self.channelAbility:Get("endStateDuration"))
+            --invocation:SetPredictionId(self.channelRequest.prediction_id)
+            invocation:Invoke()
+
+            self.channelTimer:Stop()
+
+            self.channelAbility = nil
+            self.channelRequest = nil
+            self.channelTimer = nil
+            self.cancelChannel = false
+        else
+            self.cancelChannel = true
+        end
+    else
+        self.cancelChannel = false
+    end
+end
+
+---@param message integer
+function Player:ShowTutorialMessage(message)
+    __engine.dialogue.ShowTutorialMessage(self, message)
 end
 
 return Player

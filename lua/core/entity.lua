@@ -40,7 +40,7 @@ end
 ---@param key string
 ---@return any
 function Entity:Reset(key)
-    return __engine.gameobject.Set(self, key)
+    return __engine.gameobject.Reset(self, key)
 end
 
 ---@type fun(self:Entity)
