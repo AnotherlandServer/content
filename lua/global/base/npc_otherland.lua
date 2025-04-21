@@ -46,7 +46,7 @@ function Npc:DoVendorExecute(player, ...)
     player:Set("customizationJawChubby", params[28])
 end
 
-Npc.AddBehavior("dovendorexecute", Npc.DoVendorExecute)
+Npc:AddBehavior("dovendorexecute", Npc.DoVendorExecute)
 
 function Npc:RequestDialogue(player)
     -- This is a super basic default implementation for just displaying the dialog that's 

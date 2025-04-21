@@ -9,18 +9,34 @@ local Entity = require("core.entity")
 ---@class NonClientBase: Entity
 local NonClientBase = Class(Entity)
 
----@private
-NonClientBase._BEHAVIOR = {}
+function NonClientBase:Init()
+    local m = self:GetClass()
+    ---@cast m NonClientBase
+
+    self._BEHAVIOR = {}
+
+    repeat
+        if m._BEHAVIOR ~= nil then
+            for name, callback in pairs(m._BEHAVIOR) do
+                if not self._BEHAVIOR[name] then
+                    self._BEHAVIOR[name] = callback
+                end
+            end
+        end
+
+        m = m:GetBaseClass()
+    until m == nil
+end
 
 ---Adds a behavior
 ---@param name string
 ---@param callback function
-function NonClientBase.AddBehavior(name, callback)
-    if NonClientBase._BEHAVIOR[name] then
-        Log.Warn("Overriding behavior '" .. name .. "'")
-    end 
+function NonClientBase:AddBehavior(name, callback)
+    if not rawget(self, "_BEHAVIOR") then
+        rawset(self, "_BEHAVIOR", {})
+    end
 
-    NonClientBase._BEHAVIOR[name] = callback;
+    self._BEHAVIOR[name] = callback;
 end
 
 ---@return Vector

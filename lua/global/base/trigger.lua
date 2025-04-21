@@ -26,6 +26,6 @@ function Trigger:OnTrigger(player)
     end
 end
 
-Trigger.AddBehavior("triggeraction", Trigger.OnTrigger)
+Trigger:AddBehavior("triggeraction", Trigger.OnTrigger)
 
 return Trigger
