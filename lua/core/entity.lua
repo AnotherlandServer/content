@@ -24,23 +24,34 @@ Entity.placement_guid = nil
 ---@type string
 Entity.template_guid = nil
 
----@param key string
----@return any
-function Entity:Get(key)
-    return __engine.gameobject.Get(self, key)
+---@overload fun(self:Entity, key:string): any
+---@overload fun(self:Entity, player:Player, key:string): any
+function Entity:Get(...)
+    if type(select(1, ...)) == "string" then
+        return __engine.gameobject.Get(self, select(1, ...))
+    else
+        return __engine.gameobject.GetPlayerLocal(self, select(1, ...), select(2, ...))
+    end
 end
 
----@param key string
----@param value any
----@return any
-function Entity:Set(key, value)
-    return __engine.gameobject.Set(self, key, value)
+---@overload fun(self:Entity, key:string): any
+---@overload fun(self:Entity, key:string, value:any): any
+function Entity:Set(...)
+    if type(select(1, ...)) == "string" then
+        return __engine.gameobject.Set(self, select(1, ...), select(2, ...))
+    else
+        return __engine.gameobject.SetPlayerLocal(self, select(1, ...), select(2, ...), select(3, ...))
+    end
 end
 
----@param key string
----@return any
-function Entity:Reset(key)
-    return __engine.gameobject.Reset(self, key)
+---@overload fun(self:Entity, key:string): any
+---@overload fun(self:Entity, player:Player, key:string): any
+function Entity:Reset(...)
+    if type(select(1, ...)) == "string" then
+        return __engine.gameobject.Reset(self, select(1, ...))
+    else
+        return __engine.gameobject.ResetPlayerLocal(self, select(1, ...), select(2, ...))
+    end
 end
 
 ---@type fun(self:Entity)
