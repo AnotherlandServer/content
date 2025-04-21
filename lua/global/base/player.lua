@@ -425,4 +425,9 @@ function Player:ShowTutorialMessage(message)
     __engine.dialogue.ShowTutorialMessage(self, message)
 end
 
+---@param portal_id string
+function Player:TravelToPortal(portal_id)
+    __engine.player.TravelToPortal(self, portal_id)
+end
+
 return Player
