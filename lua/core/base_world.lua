@@ -32,10 +32,12 @@ local Events = require("core.events")
 ---@field portalGuid string
 ---@field minLvl integer
 ---@field IsRaid boolean
+---@field IsTutorial boolean
 
 ---@class BaseWorld: Events
 ---@field world WorldDefinition
 ---@field zone ZoneDefinition
+---@field conf ZoneConfig
 local BaseWorld = Class(Events)
 
 ---@param player Player
@@ -49,8 +51,34 @@ end
 
 ---@param player Player
 function BaseWorld:SpawnPlayer(player)
+    if self.conf.settings.IsTutorial == true then
+        player:Set("tutorialMode", true)
+        player:Set("firstTimeSpawn", true)
+    else
+        player:Set("tutorialMode", false)
+        player:Set("firstTimeSpawn", false)
+    end
+
     -- Spawn the player in the game world
     player:Spawn()
+end
+
+---@param id integer
+---@return Entity?
+function BaseWorld:GetEntityById(id)
+    return __engine.world.GetEntityById(id)
+end
+
+---@param name string
+---@return Entity?
+function BaseWorld:GetEntityByName(name)
+    return __engine.world.GetEntityByName(name)
+end
+
+---@param id string
+---@return Entity[]
+function BaseWorld:FindEntitiesByTemplateId(id)
+    return __engine.world.FindAvatarsByTemplateId(id)
 end
 
 return BaseWorld

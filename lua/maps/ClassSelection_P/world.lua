@@ -9,6 +9,13 @@ local BaseWorld = require("core.base_world")
 ---@class ClassSelection_P: BaseWorld
 local ClassSelection_P = Class(BaseWorld)
 
+function ClassSelection_P:SpawnPlayer(player)
+    player:Set("tutorialMode", true)
+    player:Set("firstTimeSpawn", true)
+
+    player:Spawn()
+end
+
 function ClassSelection_P:PreLoadPlayerInventory(player)
     Log.Debug("PreLoadPlayerInventory")
 
