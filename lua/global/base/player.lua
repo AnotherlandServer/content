@@ -8,12 +8,26 @@ local Entity = require("core.entity")
 local Timer = require("core.timer")
 local AbilityInvocation = require("engine.ability_invocation")
 
+---@enum AbilityState
+local AbilityState = {
+    Casting = 0,
+    Channeling = 1,
+    EndState = 2,
+}
+
+---@class AbilityStateStore
+---@field request AbilityRequest
+---@field ability EdnaAbility
+---@field state AbilityState
+---@field currentTimer Timer
+
 ---@class Player: Entity
----@field channelAbility? EdnaAbility
----@field channelRequest? AbilityRequest
----@field channelTimer? Timer
----@field executionTimer? Timer
----@field cancelChannel boolean
+---@field abilityState? AbilityStateStore
+-----@field channelAbility? EdnaAbility
+-----@field channelRequest? AbilityRequest
+-----@field channelTimer? Timer
+-----@field executionTimer? Timer
+-----@field cancelChannel boolean
 local Player = Class(Entity)
 
 ---@private
@@ -73,7 +87,8 @@ Player:On("OnAbilityRequest",
                     request.item = item
 
                     if item.NormalAttack ~= nil then 
-                        item.NormalAttack:Invoke(self, request)
+                        self:CastAbility(item.NormalAttack, request)
+                        --item.NormalAttack:Invoke(self, request)
                     else
                         Log.Warn("No abilities found for item " .. request.reference_id)
                     end
@@ -82,7 +97,7 @@ Player:On("OnAbilityRequest",
                 skill:Invoke(self, request)
             end
         elseif request.toggle_mode == 2 then
-            self:EndChanneling()
+            self:CancelAbility()
         end  
     end)
 
@@ -331,6 +346,18 @@ function Player:BeginLoadInventory()
     __engine.inventory.BeginLoadInventory(self)
 end
 
+function Player:IsAlive()
+    if self:Get("hpCur") > self:Get("hpMin") then
+        return true
+    else
+        return false
+    end
+end
+
+function Player:IsInCombat()
+    self:Get("isInCombat")
+end
+
 ---
 ---@param class_item_name string
 ---@param clear_inventory boolean
@@ -340,84 +367,236 @@ function Player:ApplyClassItem(class_item_name, clear_inventory, callback)
 end
 
 ---comment
----@param warm_up_duration number
 ---@param ability EdnaAbility
 ---@param request AbilityRequest
-function Player:BeginChanneling(warm_up_duration, ability, request)
-    -- Check if we are still executing an ability
-    if self.executionTimer ~= nil then
-        return
+---@return boolean
+function Player:CastAbility(ability, request)
+    -- Check if we are still executing an ability and cancel it.
+    -- Return if that fails.
+    if not self:CancelAbility() then
+        Log:Debug("Player:CastAbility - Cancel ability failed")
+        return false
     end
 
-    self:EndChanneling()
+    -- Check player prerequisites.
 
-    local tickPeriod = ability:Get("TickPeriod")
-    if request.item ~= nil then 
-        tickPeriod = request.item:Get("WepAttSpeed")
-    end 
-
-    if tickPeriod <= 0 then
-        tickPeriod = ability:Get("executionTime")
+    if ability:Get("requireRunningWhenActivated") and self:GetVelocity():Length() == 0 then
+        Log:Debug("Player:CastAbility - Player is not running")
+        return false
     end
 
-    if tickPeriod > 0 then
-        self.channelAbility = ability
-        self.channelRequest = request
+    if ability:Get("sourceMustBeAlive") and not self:IsAlive() then
+        Log:Debug("Player:CastAbility - Player is not alive")
+        return false
+    end
 
-        local duration
-        
-        if not ability:Get("ChannelIndefinitely") then
-            duration = ability:Get("ChannelTime")
+    if not ability:Get("usableInCombat") and self:IsInCombat() then
+        Log:Debug("Player:CastAbility - Player is in combat")
+        return false
+    end
+
+    if not ability:Get("usableOutOfCombat") and not self:IsInCombat() then
+        Log:Debug("Player:CastAbility - Player is out of combat")
+        return false
+    end
+    
+    if ability:Get("usableWithClassWeapon") ~= -1 and self:Get("combatStyle") ~= ability:Get("usableWithClassWeapon") then
+        Log:Debug("Player:CastAbility - Player is not using the correct weapon class")
+        return false
+    end
+
+    if ability:Get("usableWithMeleeWeapon") then
+        -- todo
+    end
+
+    if ability:Get("usableWithoutWeapon") then
+        -- todo
+    end
+
+    if ability:Get("usableWithRangedWeapon") then
+        -- todo
+    end
+
+    --- Check target prerequisites
+    if not ability:Get("alwaysExecute") and ability:Get("targetType") == "Target" then
+        if not request.target then
+            Log:Debug("Player:CastAbility - No valid target")
+            return false
         end
 
-        self.executionTimer = Timer:Start(self, ability:Get("executionTime"), 0, function ()
-            self.executionTimer = nil
+        if ability:Get("targetMustBeAlive") then
+        end
 
-            if self.cancelChannel then
-                self:EndChanneling()
-            end
-        end)
+        if ability:Get("targetMustBeDead") then
+        end
 
-        self.channelTimer = Timer:Start(self, warm_up_duration, 0, function (timer, stopping)
-            if not self.channelAbility:Channel(self, self.channelRequest) then
-                self:EndChanneling()
-            else
-                self.channelTimer:Stop()
-                self.channelTimer = Timer:Start(self, tickPeriod, duration, function (timer, stopping)
-                    if not self.channelAbility:Channel(self, self.channelRequest) then
-                        self:EndChanneling()
-                    end
-                end)
-            end
-        end)
+        if ability:Get("targetMustBeOnGround") then
+        end
     end
-end
 
-function Player:EndChanneling()
-    if self.channelAbility ~= nil then
-        if self.executionTimer == nil then
-            Log.Debug("Ending channeling for player " .. self.name)
+    local executionTime = ability:Get("executionTime")
+    if request.item then
+        executionTime = request.item:Get("WepAttSpeed")
+    end
 
-            local invocation = AbilityInvocation.New(self.channelAbility, self, "Item", "Cancel")
-            invocation:SetItem(self.channelRequest.item)
-            invocation:SetDuration(self.channelAbility:Get("endStateDuration"))
-            invocation:SetComboStageId(2)
-            --invocation:SetDuration(self.channelAbility:Get("endStateDuration"))
-            --invocation:SetPredictionId(self.channelRequest.prediction_id)
-            invocation:Invoke()
-
-            self.channelTimer:Stop()
-
-            self.channelAbility = nil
-            self.channelRequest = nil
-            self.channelTimer = nil
-            self.cancelChannel = false
-        else
-            self.cancelChannel = true
+    if #ability:Get("externalCooldownsConsumed") == 0 and ability:Get("isAutoAttack") then
+        if not self:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime) then
+            Log:Debug("Player:CastAbility - Cooldown not ready")
+            return false
         end
     else
-        self.cancelChannel = false
+        if not self:ConsumeCooldown(ability:Get("externalCooldownsConsumed"), executionTime) then
+            Log:Debug("Player:CastAbility - Cooldown not ready")
+            return false
+        end
     end
+
+    
+    local ability_type
+    if request.item ~= nil then
+        ability_type = "Item"
+    else
+        ability_type = "Skill"
+    end
+
+    Log:Debug("Player:CastAbility - Player is casting ability " .. request.ability_id)
+
+    local invocation = AbilityInvocation.New(ability, self, ability_type, "Charge")
+    invocation:SetTarget(request.target)
+    invocation:SetRotation(request.target_rotation)
+    invocation:SetDuration(ability:Get("CastTime"))
+    invocation:Invoke()
+
+    self.abilityState = {
+        request = request,
+        ability = ability,
+        state = AbilityState.Casting,
+        currentTimer = Timer:Start(self, ability:Get("CastTime"), 0, function () 
+            self.abilityState.state = AbilityState.Channeling
+
+            local channel_time
+            if not ability:Get("ChannelIndefinitely") then
+                channel_time = ability:Get("ChannelTime")
+            else
+                channel_time = 99999
+            end
+
+            if channel_time > 0 then
+                local invocation = AbilityInvocation.New(ability, self, ability_type, "Channel")
+                invocation:SetTarget(request.target)
+                invocation:SetRotation(request.target_rotation)
+
+                if ability:Get("ChannelIndefinitely") then
+                    invocation:SetDuration(99999)
+                else
+                    invocation:SetDuration(ability:Get("ChannelTime"))
+                end
+
+                if request.item then
+                    invocation:SetItem(request.item)
+                end
+
+                invocation:Invoke()
+
+                
+                local tick_time = ability:Get("TickPeriod")
+
+                if request.item then
+                    tick_time = request.item:Get("WepAttSpeed")
+                end
+            
+                self.abilityState.currentTimer = Timer:Start(self, tick_time, channel_time, function (timer, stopping)
+                    local invocation = AbilityInvocation.New(ability, self, ability_type, "Use")
+                    invocation:SetTarget(request.target)
+                    invocation:SetRotation(request.target_rotation)
+                    invocation:SetItem(request.item)
+
+                    local valid_targets = ability:Channel(self, invocation, request)
+
+                    invocation:Invoke()
+
+                    if stopping or not valid_targets then
+                        timer:Stop()
+
+                        self.abilityState.state = AbilityState.EndState
+
+                        local invocation = AbilityInvocation.New(ability, self, ability_type, "Cancel")
+                        invocation:SetDuration(ability:Get("endStateDuration"))
+
+                        if request.target_rotation then
+                            invocation:SetRotation(request.target_rotation)
+                        end
+
+                        if request.item then
+                            invocation:SetItem(request.item)
+                        end
+
+                        invocation:Invoke()
+
+                        if ability:Get("endStateDuration") > 0 then
+                            self.abilityState.currentTimer = Timer:Start(self, ability:Get("endStateDuration"), 0, function (timer)
+                                self.abilityState = nil
+                            end)
+                        else
+                            self.abilityState = nil
+                        end
+                    end
+                end)
+            else
+                Log.Debug("Player:CastAbility - Executing ability " .. request.ability_id)
+                local invocation = AbilityInvocation.New(ability, self, ability_type, "Use")
+                invocation:SetDuration(executionTime)
+                invocation:SetTarget(request.target)
+                invocation:SetPredictionId(request.prediction_id)
+                invocation:SetComboStageId(request.combo_stage_id)
+            
+                if request.target_rotation then
+                    invocation:SetRotation(request.target_rotation)
+                end
+            
+                if request.item then
+                    invocation:SetItem(request.item)
+                end
+                
+                ability:Use(self, invocation, request)
+        
+                invocation:Invoke() 
+
+                self.abilityState = nil
+            end
+        end)
+    }
+
+    return true
+end
+
+function Player:CancelAbility()
+    if not self.abilityState then
+        return true
+    end
+
+    if not self.abilityState.ability:Get("canBeInterrupted") then
+        return false
+    end
+
+    Log.Debug("Player:CancelAbility - Cancelling ability " .. self.abilityState.request.ability_id)
+
+    if self.abilityState.currentTimer then
+        self.abilityState.currentTimer:Stop()
+    end
+
+    local ability_type
+    if self.abilityState.request.item ~= nil then
+        ability_type = "Item"
+    else
+        ability_type = "Skill"
+    end
+
+    local invocation = AbilityInvocation.New(self.abilityState.ability, self, ability_type, "Cancel")
+    invocation:SetItem(self.abilityState.request.item)
+    invocation:Invoke()
+
+    return true
 end
 
 ---@param message integer
