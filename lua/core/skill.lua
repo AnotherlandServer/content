@@ -22,7 +22,6 @@ function dump(o)
     end
  end
 
----comment
 ---@param key string
 ---@return any
 function Skill:Get(key)

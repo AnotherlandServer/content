@@ -86,7 +86,6 @@ function Entity:GetVelocity()
     return __engine.movement.GetVelocity(self)
 end
 
----comment
 ---@return Entity[]
 function Entity:GetInterests()
     return __engine.interests.GetInterests(self)

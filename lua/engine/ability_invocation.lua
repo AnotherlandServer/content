@@ -141,7 +141,7 @@ function AbilityInvocation:AddDamageEffect(target, amount, delay, duration, flag
     }
 end
 
----comment
+
 ---@param target Entity
 ---@param amount integer
 ---@param delay? number
@@ -157,7 +157,6 @@ function AbilityInvocation:AddHealingEffect(target, amount, delay, duration)
     }
 end
 
----comment
 ---@param target Entity
 ---@param buff any
 function AbilityInvocation:AddBuffEffect(target, buff)

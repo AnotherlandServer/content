@@ -40,7 +40,6 @@ function Player.AddBehavior(name, callback)
     Player._BEHAVIOR[name] = callback;
 end
 
----comment
 ---@param self Player
 ---@param _ any
 ---@param main_hand string
@@ -60,8 +59,7 @@ function Player:Init()
     self.cancelChannel = false
 end
 
-Player:On("OnAbilityRequest", 
-    ---comment
+Player:On("OnAbilityRequest",     
     ---@param self Player
     ---@param request AbilityRequest
     function (self, request)
@@ -101,19 +99,16 @@ Player:On("OnAbilityRequest",
         end  
     end)
 
----comment
 ---@param self Player
 Player:On("OnAbilityChannel", function (self)
 
     end
 )
 
----comment
 ---@param self Player
 ---@param mainhand? EdnaFunction
 ---@param offhand? EdnaFunction
 Player:On("OnWeaponSelect", function (self, mainhand, offhand)
-    ---comment
     ---@param stats any
     ---@param weapon EdnaFunction
     function AddWeaponStats(stats, weapon)
@@ -132,8 +127,7 @@ Player:On("OnWeaponSelect", function (self, mainhand, offhand)
         stats.attributeHealth = stats.attributeHealth + weapon:Get("Stamina")
         stats.attributeFocus = stats.attributeFocus + weapon:Get("Focus")
     end
-
-    ---comment
+    
     ---@param stats any
     ---@param weapon EdnaFunction
     function AddAutoAttribute(stats, weapon)
@@ -276,35 +270,29 @@ Player:On("OnWeaponSelect", function (self, mainhand, offhand)
     --statXpMod
 end)
 
----comment
 ---@param item_id string
 ---@return ItemBase
 function Player:GetItem(item_id)
     return __engine.inventory.GetItem(self, item_id)
 end
 
----comment
 ---@return ItemBase[]
 function Player:GetEquipment()
     return __engine.inventory.GetEquipment(self)
 end
 
----comment
 ---@return ItemBase[]
 function Player:GetItems()
     return __engine.inventory.GetItems(self)
 end
 
----comment
 ---@return EdnaAbility?
 function Player:GetSkill(skill_id)
     return __engine.skillbook.GetSkill(self, skill_id)
 end
 
----comment
 ---@param cooldowns string[]|ContentRef[]
----@param duration number
-function Player:ConsumeCooldown(cooldowns, duration)
+function Player:ConsumeCooldown(cooldowns)
     if #cooldowns == 0 then
         return
     end
@@ -316,13 +304,32 @@ function Player:ConsumeCooldown(cooldowns, duration)
             table.insert(ids, v.id)
         end
 
-        return __engine.cooldown.Consume(self, ids, duration)
+        return __engine.cooldown.Consume(self, ids)
     else
-        return __engine.cooldown.Consume(self, cooldowns, duration)
+        return __engine.cooldown.Consume(self, cooldowns)
     end
 end
 
----comment
+---@param cooldowns string[]|ContentRef[]
+---@param duration number
+function Player:EmitCooldown(cooldowns, duration)
+    if #cooldowns == 0 then
+        return
+    end
+
+    if type(cooldowns[1]) == "table" then
+        local ids = {}
+
+        for _,v in pairs(cooldowns) do
+            table.insert(ids, v.id)
+        end
+
+        return __engine.cooldown.Emit(self, ids, duration)
+    else
+        return __engine.cooldown.Emit(self, cooldowns, duration)
+    end
+end
+
 ---@param other NpcOtherland|Player
 ---@return Relationship
 function Player:Relationship(other)
@@ -366,7 +373,6 @@ function Player:ApplyClassItem(class_item_name, clear_inventory, callback)
     __engine.player.ApplyClassItem(self, class_item_name, clear_inventory, callback)
 end
 
----comment
 ---@param ability EdnaAbility
 ---@param request AbilityRequest
 ---@return boolean
@@ -440,12 +446,24 @@ function Player:CastAbility(ability, request)
     end
 
     if #ability:Get("externalCooldownsConsumed") == 0 and ability:Get("isAutoAttack") then
-        if not self:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime) then
+        if not self:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}) then
             Log:Debug("Player:CastAbility - Cooldown not ready")
             return false
         end
     else
-        if not self:ConsumeCooldown(ability:Get("externalCooldownsConsumed"), executionTime) then
+        if not self:ConsumeCooldown(ability:Get("externalCooldownsConsumed")) then
+            Log:Debug("Player:CastAbility - Cooldown not ready")
+            return false
+        end
+    end
+
+    if #ability:Get("externalCooldownsEmitted") == 0 and ability:Get("isAutoAttack") then
+        if not self:EmitCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime) then
+            Log:Debug("Player:CastAbility - Cooldown not ready")
+            return false
+        end
+    else
+        if not self:EmitCooldown(ability:Get("externalCooldownsEmitted"), executionTime) then
             Log:Debug("Player:CastAbility - Cooldown not ready")
             return false
         end

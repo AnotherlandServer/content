@@ -8,7 +8,6 @@ local Class = require("core.class")
 ---@class ItemEdna: ItemBase
 local ItemEdna = Class(require("global.base.item_base"))
 
----comment
 ---@return EdnaAbility[]
 function ItemEdna:GetAbilities()
     return __engine.inventory.GetItemAbilities(self)

@@ -14,7 +14,6 @@ local Events = require("core.events")
 ---@field _engine_timer table
 local Timer = Class()
 
----comment
 ---@param owner Entity
 ---@param interval number
 ---@param max_duration? number

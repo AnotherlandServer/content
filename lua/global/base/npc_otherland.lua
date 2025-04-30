@@ -65,7 +65,6 @@ local RELATIONSHIP = {
     HOSTILE = 2,
 }
 
----comment
 ---@param other NpcOtherland|Player
 ---@return Relationship
 function Npc:Relationship(other)

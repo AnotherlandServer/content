@@ -13,8 +13,6 @@ local NpcOtherland = require("global.base.npc_otherland")
 ---@field def TargetFactoryDef
 local TargetFactory = {}
 
-
----comment
 ---@param source Entity
 ---@param ability EdnaAbility
 ---@param def TargetFactoryDef
@@ -33,7 +31,6 @@ function TargetFactory.New(source, ability, def)
     return instance
 end
 
----comment
 ---@param request AbilityRequest
 ---@return Entity[]
 function TargetFactory:FindTargets(request)
@@ -53,7 +50,6 @@ function TargetFactory:FindTargets(request)
     return targets
 end
 
----comment
 ---@return NpcOtherland|Player[]
 function TargetFactory:GetFilteredInterests()
     local interests = self.source:GetInterests()
@@ -85,7 +81,6 @@ function TargetFactory:GetFilteredInterests()
     return filtered
 end
 
----comment
 ---@param request AbilityRequest
 ---@return Entity[]
 function TargetFactory:FindTargets_pie(request)
@@ -147,7 +142,6 @@ function TargetFactory:FindTargets_pie(request)
     return result
 end
 
----comment
 ---@param request AbilityRequest
 ---@return Entity[]
 function TargetFactory:FindTargets_none(request)

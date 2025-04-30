@@ -45,7 +45,6 @@ function PortalBook:New(player, portal, can_save, max_slots)
     return obj
 end
 
----comment
 ---@param map_name string
 ---@param world_name string
 ---@param display_name string

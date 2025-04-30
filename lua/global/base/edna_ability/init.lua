@@ -11,7 +11,6 @@ local Timer = require("core.timer")
 ---@class EdnaAbility: Skill
 local EdnaAbility = Class(require("core.skill"))
 
----comment
 ---@param invocation AbilityInvocation
 ---@param effector Damage
 ---@param target Entity
@@ -36,7 +35,6 @@ function EdnaAbility:CauseDamage(invocation, effector, target)
     invocation:AddDamageEffect(target, damage, effector.delay, invocation.ability:Get("TickPeriod"))
 end
 
----comment
 ---@param request AbilityRequest
 ---@param invocation AbilityInvocation
 ---@param effector Damage
