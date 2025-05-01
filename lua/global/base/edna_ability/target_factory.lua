@@ -4,6 +4,7 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local NpcOtherland = require("global.base.npc_otherland")
+local Relationship = require("core.relationship")
 
 ---@module '_effector_defs'
 
@@ -66,12 +67,12 @@ function TargetFactory:GetFilteredInterests()
         if v.GetClass() == NpcOtherland or v.GetClass() == Player then 
             ---@cast v NpcOtherland|Player
 
-            local relationship = v:Relationship(self.source --[[@as Player]])
+            local relationship = v:RelationshipTo(self.source --[[@as Player]])
 
             if 
-                (self.def.settings.affectEnemies and relationship == 2) or 
-                (self.def.settings.affectNeutral and relationship == 1) or 
-                (self.def.settings.affectFriends and relationship == 0) 
+                (self.def.settings.affectEnemies and relationship == Relationship.Affiliation.Hostile) or 
+                (self.def.settings.affectNeutral and relationship == Relationship.Affiliation.Neutral) or 
+                (self.def.settings.affectFriends and relationship >= Relationship.Affiliation.Friendly)
             then
                 table.insert(filtered, v)
             end

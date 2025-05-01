@@ -7,6 +7,7 @@ local Class = require("core.class")
 local Entity = require("core.entity")
 local Timer = require("core.timer")
 local AbilityInvocation = require("engine.ability_invocation")
+local Relationship = require("core.relationship")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -330,21 +331,6 @@ function Player:EmitCooldown(cooldowns, duration)
     end
 end
 
----@param other NpcOtherland|Player
----@return Relationship
-function Player:Relationship(other)
-    local NpcOtherland = require("global.base.npc_otherland")
-
-    -- Todo: Actually check faction standing
-    if other:GetClass() == Player then
-        return 1
-    elseif other:GetClass() == NpcOtherland then
-        return other:Relationship(self)
-    else
-        return 1
-    end
-end
-
 function Player:Spawn()
     __engine.player.Spawn(self)
 end
@@ -625,6 +611,14 @@ end
 ---@param portal_id string
 function Player:TravelToPortal(portal_id)
     __engine.player.TravelToPortal(self, portal_id)
+end
+
+---@param other Player|NpcOtherland
+---@return Affiliation
+function Player:RelationshipTo(other)
+    return Relationship.AffiliationFromRank(
+        __engine.faction.EntityRelationship(self, other)
+    )
 end
 
 return Player

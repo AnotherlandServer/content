@@ -5,6 +5,7 @@
 
 local Class = require("core.class")
 local NonClientBase = require("global.base.non_client_base")
+local Relationship = require("core.relationship")
 
 ---@class NpcOtherland: NonClientBase
 local Npc = Class(NonClientBase)
@@ -58,41 +59,12 @@ function Npc:RequestDialogue(player)
     end
 end
 
----@enum Relationship
-local RELATIONSHIP = {
-    FRIENDLY = 0,
-    NEUTRAL = 1,
-    HOSTILE = 2,
-}
-
 ---@param other NpcOtherland|Player
----@return Relationship
-function Npc:Relationship(other)
-    local Player = require("global.base.player")
-
-    -- Todo: Actually check faction standing
-    if other:GetClass() == Player then
-        local faction = self:Get("Faction")
-        ---@cast faction ContentRef[]
-        
-        for _,v in ipairs(faction) do
-            if v.id == "194153ba-ca8d-4652-929d-00b34b7b9982" then
-                return RELATIONSHIP.FRIENDLY
-            elseif v.id == "327b4c6f-7edc-4a91-a2d5-c2ee44049024" then
-                return RELATIONSHIP.FRIENDLY
-            elseif v.id == "55d9952d-bcef-4acb-a6b5-d7cc82ac8e6a" then
-                return RELATIONSHIP.NEUTRAL
-            elseif v.id == "76768078-b016-468f-94fe-d9b0e0aa763b" then
-                return RELATIONSHIP.NEUTRAL
-            elseif v.id == "56c63903-a205-45bb-a059-a3c73833e2d6" then
-                return RELATIONSHIP.FRIENDLY
-            end
-        end
-
-        return RELATIONSHIP.HOSTILE
-    else
-        return RELATIONSHIP.NEUTRAL
-    end
+---@return Affiliation
+function Npc:RelationshipTo(other)
+    return Relationship.AffiliationFromRank(
+        __engine.faction.EntityRelationship(self, other)
+    )
 end
 
 return Npc
