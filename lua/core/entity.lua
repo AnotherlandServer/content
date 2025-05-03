@@ -12,17 +12,8 @@ local Entity = Class(Events)
 ---@type string
 Entity.name = nil
 
----@type integer
-Entity.avatar_id = nil
-
 ---@type string
 Entity.class = nil
-
----@type string
-Entity.placement_guid = nil
-
----@type string
-Entity.template_guid = nil
 
 ---@overload fun(self:Entity, key:string): any
 ---@overload fun(self:Entity, player:Player, key:string): any
@@ -69,26 +60,6 @@ end
 
 function Entity:HotReload()
     self:Attach()
-end
-
----@return Vector
-function Entity:GetPosition()
-    return __engine.movement.GetPosition(self)
-end
-
----@return Quaternion
-function Entity:GetRotation()
-    return __engine.movement.GetRotation(self)
-end
-
----@return Vector
-function Entity:GetVelocity()
-    return __engine.movement.GetVelocity(self)
-end
-
----@return Entity[]
-function Entity:GetInterests()
-    return __engine.interests.GetInterests(self)
 end
 
 return Entity

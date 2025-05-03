@@ -7,7 +7,6 @@ local Class = require("core.class")
 local Events = require("core.events")
 
 ---@class Timer
----@field _callback function
 ---@field _interval number
 ---@field _elapsed number
 ---@field _max_duration number
@@ -23,7 +22,6 @@ function Timer:Start(owner, interval, max_duration, callback)
     local instance = {}
     setmetatable(instance, { __index = Timer })
 
-    instance._callback = callback
     instance._interval = interval
     instance._elapsed = 0
     instance._max_duration = max_duration
@@ -32,13 +30,13 @@ function Timer:Start(owner, interval, max_duration, callback)
             instance._elapsed = instance._elapsed + interval
 
             if instance._elapsed >= instance._max_duration then
-                instance._callback(timer, true)
+                callback(instance, true)
                 instance:Stop()
             else
-                callback(timer, false)
+                callback(instance, false)
             end
         else
-            callback(timer, false)
+            callback(instance, false)
         end
     end)
 

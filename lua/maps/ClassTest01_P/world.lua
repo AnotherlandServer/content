@@ -5,6 +5,7 @@
 
 local Class = require("core.class")
 local BaseWorld = require("core.base_world")
+local Timer = require("core.timer")
 
 ---@class ClassTest01_P: BaseWorld
 local ClassTest01_P = Class(BaseWorld)

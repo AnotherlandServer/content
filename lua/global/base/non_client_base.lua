@@ -7,6 +7,9 @@ local Class = require("core.class")
 local Entity = require("core.entity")
 
 ---@class NonClientBase: Entity
+---@field avatar_id string
+---@field placement_guid string
+---@field template_guid string
 local NonClientBase = Class(Entity)
 
 function NonClientBase:Init()
@@ -52,6 +55,11 @@ end
 ---@return Vector
 function NonClientBase:GetVelocity()
     return __engine.movement.GetVelocity(self)
+end
+
+---@return Entity[]
+function NonClientBase:GetInterests()
+    return __engine.interests.GetInterests(self)
 end
 
 return NonClientBase

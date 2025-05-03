@@ -4,11 +4,13 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
+local HitType = require("core.hittype")
 
 ---@class EdnaFunction: ItemEdna
 ---@field NormalAttack EdnaAbility
 ---@field HeavyAttack? EdnaAbility
 ---@field SpecialAttack? EdnaAbility
+---@field owner Player
 local EdnaFunction = Class(require("global.base.item_edna"))
 
 function EdnaFunction:Init()
@@ -23,6 +25,30 @@ function EdnaFunction:Init()
             self.SpecialAttack = v
         end 
     end
+end
+
+---@param target Player|NpcOtherland
+---@return HitType type
+---@return number damage
+function EdnaFunction:RollDamage(target)
+    local minDamage = self:Get("WepMinDmg")
+    local maxDamage = self:Get("WepMaxDmg")
+
+    local damage = math.random(minDamage, maxDamage)
+
+    return HitType.Normal, damage
+end
+
+---@param target Player|NpcOtherland
+---@return HitType type
+---@return number heal
+function EdnaFunction:RollHeal(target)
+    local minHeal = self:Get("WepMinDmg")
+    local maxHeal = self:Get("WepMaxDmg")
+
+    local heal = math.random(minHeal, maxHeal)
+
+    return HitType.Normal, heal
 end
 
 return EdnaFunction

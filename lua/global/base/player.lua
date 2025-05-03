@@ -6,7 +6,7 @@
 local Class = require("core.class")
 local Entity = require("core.entity")
 local Timer = require("core.timer")
-local AbilityInvocation = require("engine.ability_invocation")
+local AbilityEvent = require("engine.ability_event")
 local Relationship = require("core.relationship")
 
 ---@enum AbilityState
@@ -24,6 +24,7 @@ local AbilityState = {
 
 ---@class Player: Entity
 ---@field abilityState? AbilityStateStore
+---@field avatar_id string
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest
 -----@field channelTimer? Timer
@@ -74,9 +75,19 @@ Player:On("OnAbilityRequest",
             Log.Debug("Combo id: " .. request.combo_stage_id)
         end
 
-        Log.Debug("Toggle mode: " .. request.toggle_mode)
+        if request.toggle_mode ~= nil then
+            Log.Debug("Toggle mode: " .. request.toggle_mode)
+        end
 
-        if request.reference_id and request.toggle_mode == 1 then 
+        if request.ability_id ~= nil then
+            Log.Debug("Ability id: " .. request.ability_id)
+        end
+
+        if request.reference_id ~= nil then
+            Log.Debug("Reference id: " .. request.reference_id)
+        end
+
+        if request.reference_id and (request.toggle_mode == 1 or request.toggle_mode == nil) then 
             local item = self:GetItem(request.reference_id)
             local skill = self:GetSkill(request.reference_id)
 
@@ -93,7 +104,9 @@ Player:On("OnAbilityRequest",
                     end
                 end
             elseif skill ~= nil then
-                skill:Invoke(self, request)
+                self:CastAbility(skill, request)
+            else
+                Log.Warn("No item found for " .. request.reference_id)
             end
         elseif request.toggle_mode == 2 then
             self:CancelAbility()
@@ -455,21 +468,34 @@ function Player:CastAbility(ability, request)
         end
     end
 
-    
-    local ability_type
-    if request.item ~= nil then
-        ability_type = "Item"
-    else
-        ability_type = "Skill"
+    Log:Debug("Player:CastAbility - Player is casting ability " .. ability.name)
+
+    local target = request.target
+    if target == nil then
+        local targetType = ability:Get("targetType")
+
+        Log.Debug("Player:CastAbility - Target type " .. targetType)
+
+        if targetType == "Self" then
+            target = self
+        else
+            Log.Warn("Player:CastAbility - Unknown target type " .. targetType)
+        end
     end
 
-    Log:Debug("Player:CastAbility - Player is casting ability " .. request.ability_id)
+    local event = AbilityEvent.New(self, "Charge")
+    event:SetAbility(ability)
+    event:SetTarget(target)
+    event:SetRotation(request.target_rotation)
+    event:SetDuration(ability:Get("CastTime"))
 
-    local invocation = AbilityInvocation.New(ability, self, ability_type, "Charge")
-    invocation:SetTarget(request.target)
-    invocation:SetRotation(request.target_rotation)
-    invocation:SetDuration(ability:Get("CastTime"))
-    invocation:Invoke()
+    if request.item then
+        event:SetEffectSource(request.item)
+    else
+        event:SetEffectSource(ability)
+    end
+
+    event:Fire()
 
     self.abilityState = {
         request = request,
@@ -479,28 +505,26 @@ function Player:CastAbility(ability, request)
             self.abilityState.state = AbilityState.Channeling
 
             local channel_time
-            if not ability:Get("ChannelIndefinitely") then
-                channel_time = ability:Get("ChannelTime")
-            else
+            if ability:Get("ChannelIndefinitely") then
                 channel_time = 99999
+            else
+                channel_time = ability:Get("ChannelTime")
             end
 
             if channel_time > 0 then
-                local invocation = AbilityInvocation.New(ability, self, ability_type, "Channel")
-                invocation:SetTarget(request.target)
-                invocation:SetRotation(request.target_rotation)
-
-                if ability:Get("ChannelIndefinitely") then
-                    invocation:SetDuration(99999)
-                else
-                    invocation:SetDuration(ability:Get("ChannelTime"))
-                end
+                local event = AbilityEvent.New(self, "Channel")
+                event:SetAbility(ability)
+                event:SetTarget(target)
+                event:SetRotation(request.target_rotation)
+                event:SetDuration(channel_time)
 
                 if request.item then
-                    invocation:SetItem(request.item)
+                    event:SetEffectSource(request.item)
+                else
+                    event:SetEffectSource(ability)
                 end
 
-                invocation:Invoke()
+                event:Fire()
 
                 
                 local tick_time = ability:Get("TickPeriod")
@@ -510,32 +534,36 @@ function Player:CastAbility(ability, request)
                 end
             
                 self.abilityState.currentTimer = Timer:Start(self, tick_time, channel_time, function (timer, stopping)
-                    local invocation = AbilityInvocation.New(ability, self, ability_type, "Use")
-                    invocation:SetTarget(request.target)
-                    invocation:SetRotation(request.target_rotation)
-                    invocation:SetItem(request.item)
+                    local event = AbilityEvent.New(self, "Use")
+                    event:SetAbility(ability)
+                    event:SetTarget(target)
+                    event:SetRotation(request.target_rotation)
+                    event:SetEffectSource(request.item)
 
-                    local valid_targets = ability:Channel(self, invocation, request)
+                    local had_effects = ability:Channel(self, event, request)
 
-                    invocation:Invoke()
+                    event:Fire()
 
-                    if stopping or not valid_targets then
+                    if stopping or (ability:Get("ChannelIndefinitely") and not had_effects) then
                         timer:Stop()
 
                         self.abilityState.state = AbilityState.EndState
 
-                        local invocation = AbilityInvocation.New(ability, self, ability_type, "Cancel")
-                        invocation:SetDuration(ability:Get("endStateDuration"))
+                        local event = AbilityEvent.New(self, "Cancel")
+                        event:SetAbility(ability)
+                        event:SetDuration(ability:Get("endStateDuration"))
 
                         if request.target_rotation then
-                            invocation:SetRotation(request.target_rotation)
+                            event:SetRotation(request.target_rotation)
                         end
 
                         if request.item then
-                            invocation:SetItem(request.item)
+                            event:SetEffectSource(request.item)
+                        else
+                            event:SetEffectSource(ability)
                         end
 
-                        invocation:Invoke()
+                        event:Fire()
 
                         if ability:Get("endStateDuration") > 0 then
                             self.abilityState.currentTimer = Timer:Start(self, ability:Get("endStateDuration"), 0, function (timer)
@@ -548,23 +576,26 @@ function Player:CastAbility(ability, request)
                 end)
             else
                 Log.Debug("Player:CastAbility - Executing ability " .. request.ability_id)
-                local invocation = AbilityInvocation.New(ability, self, ability_type, "Use")
-                invocation:SetDuration(executionTime)
-                invocation:SetTarget(request.target)
-                invocation:SetPredictionId(request.prediction_id)
-                invocation:SetComboStageId(request.combo_stage_id)
+                local event = AbilityEvent.New(self, "Use")
+                event:SetAbility(ability)
+                event:SetDuration(executionTime)
+                event:SetTarget(target)
+                event:SetPredictionId(request.prediction_id)
+                event:SetComboStageId(request.combo_stage_id)
             
                 if request.target_rotation then
-                    invocation:SetRotation(request.target_rotation)
+                    event:SetRotation(request.target_rotation)
                 end
             
                 if request.item then
-                    invocation:SetItem(request.item)
+                    event:SetEffectSource(request.item)
+                else
+                    event:SetEffectSource(ability)
                 end
                 
-                ability:Use(self, invocation, request)
+                ability:Use(self, event, request)
         
-                invocation:Invoke() 
+                event:Fire() 
 
                 self.abilityState = nil
             end
@@ -589,16 +620,16 @@ function Player:CancelAbility()
         self.abilityState.currentTimer:Stop()
     end
 
-    local ability_type
-    if self.abilityState.request.item ~= nil then
-        ability_type = "Item"
+    local event = AbilityEvent.New(self, "Cancel")
+    event:SetAbility(self.abilityState.ability)
+
+    if self.abilityState.request.item then
+        event:SetEffectSource(self.abilityState.request.item)
     else
-        ability_type = "Skill"
+        event:SetEffectSource(self.abilityState.ability)
     end
 
-    local invocation = AbilityInvocation.New(self.abilityState.ability, self, ability_type, "Cancel")
-    invocation:SetItem(self.abilityState.request.item)
-    invocation:Invoke()
+    event:Fire()
 
     return true
 end
@@ -619,6 +650,87 @@ function Player:RelationshipTo(other)
     return Relationship.AffiliationFromRank(
         __engine.faction.EntityRelationship(self, other)
     )
+end
+
+---@enum (key) BuffReference
+local BuffReference = {
+    TemplateId = 0,
+    InstanceId = 1,
+    Name = 2,
+}
+
+---@param buff_id string|ContentRef
+---@param instigator? Player|NpcOtherland
+---@param duration? number
+---@param delay? number
+---@param stacks? integer
+---@return string
+function Player:AddBuff(buff_id, instigator, duration, delay, stacks)
+    if instigator == nil then
+        instigator = self
+    end
+
+    if type(buff_id) == "table" then
+        return __engine.buffs.AddBuff(self, instigator, buff_id.id, duration, delay, stacks)
+    else
+        return __engine.buffs.AddBuff(self, instigator, buff_id, duration, delay, stacks)
+    end
+end
+
+---@param buff_name string
+---@param instigator? Player|NpcOtherland
+---@param duration? number
+---@param delay? number
+---@param stacks? integer
+---@return string
+function Player:AddBuffByName(buff_name, instigator, duration, delay, stacks)
+    if instigator == nil then
+        instigator = self
+    end
+
+    return __engine.buffs.AddBuffByName(self, instigator, buff_name, duration, delay, stacks)
+end
+
+---@param reference_type BuffReference
+---@param buff_id string|ContentRef
+---@return boolean
+function Player:RemoveBuff(reference_type, buff_id)
+    if type(buff_id) == "table" then
+        return __engine.buffs.RemoveBuff(self, reference_type, buff_id.id)
+    else
+        return __engine.buffs.RemoveBuff(self, reference_type, buff_id)
+    end
+end
+
+---@param reference_type BuffReference
+---@param buff_id string|ContentRef
+---@return boolean
+function Player:HasBuff(reference_type, buff_id)
+    if type(buff_id) == "table" then
+        return __engine.buffs.HasBuff(self, reference_type, buff_id.id)
+    else
+        return __engine.buffs.HasBuff(self, reference_type, buff_id)
+    end
+end
+
+---@return Vector
+function Player:GetPosition()
+    return __engine.movement.GetPosition(self)
+end
+
+---@return Quaternion
+function Player:GetRotation()
+    return __engine.movement.GetRotation(self)
+end
+
+---@return Vector
+function Player:GetVelocity()
+    return __engine.movement.GetVelocity(self)
+end
+
+---@return Entity[]
+function Player:GetInterests()
+    return __engine.interests.GetInterests(self)
 end
 
 return Player

@@ -9,24 +9,9 @@ local Events = require("core.events")
 ---@class Skill: Events
 local Skill = Class(Events)
 
-function dump(o)
-    if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
-    else
-       return tostring(o)
-    end
- end
-
 ---@param key string
 ---@return any
 function Skill:Get(key)
-    Log.Debug(dump(self))
-
     if self.__skill ~= nil then
         return self.__skill:Get(key)
     else
