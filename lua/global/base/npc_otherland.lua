@@ -12,12 +12,20 @@ local Dump = require("core.dump")
 local Npc = Class(NonClientBase)
 
 --- Compute NPC base values
-local HpTable = {}
+local HpBase = {}
+local ArmorTable = {}
+local AttackPowerTable = {}
 
 for i = 1, 4 do
-    table.insert(HpTable, {
-        Hitpoints = 8.75 * i ^ 2 + 54.25 * i - 17.5
-    })
+    table.insert(HpBase, 8.75 * i ^ 2 + 54.25 * i - 17.5)
+end
+
+for i = 1, 64 do
+    table.insert(ArmorTable, math.floor((0.5755 * i ^ 2) - 1.203 * i + 0.6275))
+end
+
+for i = 1, 64 do
+    table.insert(AttackPowerTable, math.floor((0.171305 * i ^ 2) - 0.27783 * i + 0.10653))
 end
 
 function Npc:Init()
@@ -29,12 +37,12 @@ function Npc:Init()
     Log.Debug("GD " .. generalDifficulty)
 
     --- These stats control enemy difficulty and scaling
-    self:Set("hpMax", (HpTable[math.max(generalDifficulty, 1)].Hitpoints * lvl) * self:Get("HpMod"))
-    self:Set("hpCur", (HpTable[math.max(generalDifficulty, 1)].Hitpoints * lvl) * self:Get("HpMod"))
-    self:Set("statArmorReduction", 30 * (lvl - 1))
-    self:Set("statAttackPower", 10 * (lvl - 1))
+    self:Set("hpMax", (HpBase[math.max(generalDifficulty, 1)] * lvl) * self:Get("HpMod"))
+    self:Set("hpCur", (HpBase[math.max(generalDifficulty, 1)] * lvl) * self:Get("HpMod"))
+    self:Set("statArmorReduction", ArmorTable[lvl])
+    self:Set("statAttackPower", AttackPowerTable[lvl])
     self:Set("statBlockChance", 5 * generalDifficulty)
-    self:Set("statBlockedDamageMod", 0.75)
+    self:Set("statBlockedDamageMod", 0.75) -- 50% block seems to be way to high, even though the description says blocking halves damage
     self:Set("statCritChance", 5 * generalDifficulty)
     self:Set("statCriticalDamageMod", 1.3)
     self:Set("statCriticalChanceReduction", 2 * generalDifficulty)
