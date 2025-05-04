@@ -7,7 +7,6 @@ local Class = require("core.class")
 local Portal = require("global.base.structure")
 local PortalBook = require("engine.portal_book")
 
-
 local portals = {
     --{ sDestTexture = "UI_Otherland.PortalIcon.PortalMyland", sDomain = "OL", sRouting = "111.111.111", sWorldAbbreviation = "MP", IsMyLandTheme = 0, IsUnlock = 0, sFilterSettings = nil, ID = 1, sWorldTexture = "UI_Otherland.PortalIcon.PortalMyland", sPortalTexture = "UI_Otherland.PortalIcon.PortalMyland", sDisplayName = "MyPad", sLocation = "MyPadRooms_P", sWorldName = "MyPad", uxPortalGuid = "a263100d-56ce-422a-93af-a9677e2aa689" },
     { sDestTexture = "UI_Otherland.PortalIcon.PortalMyland", sDomain = "OL", sRouting = "1234.321.20", sWorldAbbreviation = "ML", IsMyLandTheme = 1, IsUnlock = 0, sFilterSettings = nil, ID = 2, sWorldTexture = "UI_Otherland.PortalIcon.PortalMyland", sPortalTexture = "UI_Otherland.PortalIcon.PortalMyland", sDisplayName = "Red Valley", sLocation = "MLRedValley_P", sWorldName = "ClanLand", uxPortalGuid = "c45efb4c-d3f9-4442-b12c-6b1507ec4aec" },
@@ -116,7 +115,13 @@ local portals = {
 ---@class Portal: NonClientBase
 local Portal = Class(Portal)
 
+function Portal:Init()
+end
+
+
 Portal:AddBehavior("interact", function (self, player)
+    Log.Debug("Portal:interact")
+
     local book = PortalBook:New(player, self)
 
     for _,portal in pairs(portals) do
@@ -140,9 +145,31 @@ end)
 ---@param player Player
 ---@param location string
 Portal:AddBehavior("confirmtravelrequest", function (self, player, location)
-    for _,v in pairs(portals) do
-        if v.sLocation == location then
-            player:TravelToPortal(v.uxPortalGuid)
+    Log.Debug("Portal:confirmtravelrequest")
+
+    if location == nil then
+        player:ConfirmTravel()
+    else
+        for _,v in pairs(portals) do
+            if v.sLocation == location then
+                player:ConfirmTravel()
+                return
+            end
+        end
+    end
+end)
+
+---@param self Portal
+Portal:AddBehavior("dotravel", function (self, player, location)
+    Log.Debug("Portal:DoTravel")
+
+    if location == nil then
+        player:TravelToPortal(self:Get("nodelink"))
+    else
+        for _,v in pairs(portals) do
+            if v.sLocation == location then
+                player:TravelToPortal(v.uxPortalGuid)
+            end
         end
     end
 end)
