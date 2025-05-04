@@ -7,7 +7,6 @@
 
 local AbilityEvent = require("engine.ability_event")
 local TargetFactory = require("engine.target_factory")
-local HitType = require("core.hittype")
 local Player = require("global.base.player")
 
 --------------------------------------------------------------------------------
@@ -354,38 +353,36 @@ local Effectors = {
     
             Log.Debug("EdnaAbility:Effector_damage - Target: " .. target.name)
 
-            if effector.item then
-                local hit_type, damage = effector.item:RollDamage(target)
-                local combat_flags
-                local delta_hp_id = nil
+            local hit_type, damage = effector.source:Attack(target)
+            local combat_flags
+            local delta_hp_id = nil
 
-                if damage > 0 then
-                    delta_hp_id = __engine.combat.Damage(target, damage)
-                end
-
-                if hit_type == HitType.Critical then
-                    combat_flags = AbilityEvent.CombatFlags.Critical
-                elseif hit_type == HitType.Dodge then
-                    combat_flags = AbilityEvent.CombatFlags.Dodge
-                elseif hit_type == HitType.Parry then
-                    combat_flags = AbilityEvent.CombatFlags.Parry
-                elseif hit_type == HitType.Block then
-                    combat_flags = AbilityEvent.CombatFlags.Block
-                elseif hit_type == HitType.Evade then
-                    combat_flags = AbilityEvent.CombatFlags.Evading
-                elseif hit_type == HitType.Miss then
-                    combat_flags = AbilityEvent.CombatFlags.Miss
-                end
-
-                effects[#effects + 1] = {
-                    target = target,
-                    type = AbilityEvent.EffectType.Damage,
-                    combat_flags = combat_flags,
-                    delta_hp_id = delta_hp_id,
-                    amount = damage,
-                    delay = def.delay,
-                }
+            if damage > 0 then
+                delta_hp_id = __engine.combat.Damage(target, damage)
             end
+
+            if hit_type == "Critical" then
+                combat_flags = AbilityEvent.CombatFlags.Critical
+            elseif hit_type == "Dodge" then
+                combat_flags = AbilityEvent.CombatFlags.Dodge
+            elseif hit_type == "Parry" then
+                combat_flags = AbilityEvent.CombatFlags.Parry
+            elseif hit_type == "Block" then
+                combat_flags = AbilityEvent.CombatFlags.Block
+            elseif hit_type == "Evade" then
+                combat_flags = AbilityEvent.CombatFlags.Evading
+            elseif hit_type == "Miss" then
+                combat_flags = AbilityEvent.CombatFlags.Miss
+            end
+
+            effects[#effects + 1] = {
+                target = target,
+                type = AbilityEvent.EffectType.Damage,
+                combat_flags = combat_flags,
+                delta_hp_id = delta_hp_id,
+                amount = damage,
+                delay = def.delay,
+            }
     
             ::continue::
         end
@@ -416,7 +413,7 @@ local Effectors = {
                 if effector.item then
                     hit_type, heal_amount = effector.item:RollHeal(target)
 
-                    if hit_type == HitType.Critical then
+                    --[[if hit_type == HitType.Critical then
                         combat_flags = AbilityEvent.CombatFlags.Critical
                     elseif hit_type == HitType.Dodge then
                         combat_flags = AbilityEvent.CombatFlags.Dodge
@@ -428,7 +425,7 @@ local Effectors = {
                         combat_flags = AbilityEvent.CombatFlags.Evading
                     elseif hit_type == HitType.Miss then
                         combat_flags = AbilityEvent.CombatFlags.Miss
-                    end
+                    end]]
                 end
             end
 

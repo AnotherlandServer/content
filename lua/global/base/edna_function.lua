@@ -4,7 +4,6 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
-local HitType = require("core.hittype")
 
 ---@class EdnaFunction: ItemEdna
 ---@field NormalAttack EdnaAbility
@@ -36,7 +35,7 @@ function EdnaFunction:RollDamage(target)
 
     local damage = math.random(minDamage, maxDamage)
 
-    return HitType.Normal, damage
+    return 0, damage
 end
 
 ---@param target Player|NpcOtherland
@@ -48,7 +47,7 @@ function EdnaFunction:RollHeal(target)
 
     local heal = math.random(minHeal, maxHeal)
 
-    return HitType.Normal, heal
+    return 0, heal
 end
 
 return EdnaFunction

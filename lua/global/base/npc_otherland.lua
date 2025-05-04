@@ -6,9 +6,31 @@
 local Class = require("core.class")
 local NonClientBase = require("global.base.non_client_base")
 local Relationship = require("core.relationship")
+local Dump = require("core.dump")
 
 ---@class NpcOtherland: NonClientBase
 local Npc = Class(NonClientBase)
+
+--- Compute NPC base values
+local HpTable = {}
+
+for i = 1, 4 do
+    table.insert(HpTable, {
+        Hitpoints = 8.75 * i ^ 2 + 54.25 * i - 17.5
+    })
+end
+
+function Npc:Init()
+    NonClientBase.Init(self)
+
+    local lvl = self:Get("lvl")
+    local generalDifficulty = math.max(self:Get("generalDifficulty"), 1)
+
+    Log.Debug("GD " .. generalDifficulty)
+
+    self:Set("hpMax", (HpTable[generalDifficulty].Hitpoints * lvl) * self:Get("HpMod"))
+    self:Set("hpCur", (HpTable[generalDifficulty].Hitpoints * lvl) * self:Get("HpMod"))
+end
 
 ---MetaMorph vendor execute
 ---@param player Player

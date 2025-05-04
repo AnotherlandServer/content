@@ -8,6 +8,8 @@ local Entity = require("core.entity")
 local Timer = require("core.timer")
 local AbilityEvent = require("engine.ability_event")
 local Relationship = require("core.relationship")
+local QuestLog = require("engine.quest_log")
+local HitTable = require("engine.hit_table")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -15,6 +17,24 @@ local AbilityState = {
     Channeling = 1,
     EndState = 2,
 }
+
+
+local HitRatingFactor = 100;
+local CritRatingFactor = 100;
+local DodgeRatingFactor = 100;
+local ParryRatingFactor = 100;
+local BlockRatingFactor = 100;
+
+--- Compute base stamina
+local BaseStamina = {}
+
+for i = 1, 64 do
+    BaseStamina[i] = math.floor((0.15344 * (i ^ 2) + 19.23756 * i + 0.61323) + 0.5)
+end
+
+for i = 1, 64 do
+    Log.Debug("Base stamina for level " .. i .. ": " .. BaseStamina[i])
+end
 
 ---@class AbilityStateStore
 ---@field request AbilityRequest
@@ -25,6 +45,7 @@ local AbilityState = {
 ---@class Player: Entity
 ---@field abilityState? AbilityStateStore
 ---@field avatar_id string
+---@field quest_log QuestLog
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest
 -----@field channelTimer? Timer
@@ -55,10 +76,28 @@ Player.AddBehavior("requestselectweapon", function (self, _, main_hand, off_hand
     -- Update active weapon
     self:Set("weapon", { main_hand, off_hand })
     self:Emit("OnEquipmentChanged")
+
+    self:RecalculateStats()
+end)
+
+---@param self Player
+---@param _ any
+---@param dest string
+Player.AddBehavior("travel", function (self, _, dest)
+    Log.Debug("Requesting travel for player " .. self.name .. " - " .. dest)
+    
+    local zone_name = string.match(dest, "dest=(.+)")
+    
+    if zone_name then
+        self:TravelToZone(zone_name)
+    else
+        Log.Warn("Invalid destination format: " .. dest)
+    end
 end)
 
 function Player:Init()
     self.cancelChannel = false
+    self.quest_log = QuestLog:New(self)
 end
 
 Player:On("OnAbilityRequest",     
@@ -123,29 +162,91 @@ Player:On("OnAbilityChannel", function (self)
 ---@param mainhand? EdnaFunction
 ---@param offhand? EdnaFunction
 Player:On("OnWeaponSelect", function (self, mainhand, offhand)
+
+end)
+
+function Player:RecalculateStats()
     ---@param stats any
     ---@param weapon EdnaFunction
     function AddWeaponStats(stats, weapon)
-        local dps = (weapon:Get("WepMinDmg") + ((weapon:Get("WepMaxDmg") - weapon:Get("WepMinDmg")) / 2)) / weapon:Get("WepAttSpeed")
-
-        stats.statWeaponDPS = stats.statWeaponDPS + dps
         stats.statWepMaxDmg = stats.statWepMaxDmg + weapon:Get("WepMaxDmg")
         stats.statWepMinDmg = stats.statWepMinDmg + weapon:Get("WepMinDmg")
-        stats.statHitRating = stats.statHitRating + weapon:Get("HitRating")
-        stats.statHeavyRating = stats.statHeavyRating + weapon:Get("HeavyRating")
-        stats.statAttackPowerRating = stats.statAttackPowerRating + weapon:Get("AttackPowerRating")
-        stats.statSpecialRating = stats.statSpecialRating + weapon:Get("SpecialRating")
-        stats.statParryRating = stats.statParryRating + weapon:Get("ParryRating")
-        stats.statPeneRating = stats.statPeneRating + weapon:Get("PeneRating")
-        stats.attributeStrength = stats.attributeStrength + weapon:Get("Strength")
-        stats.attributeHealth = stats.attributeHealth + weapon:Get("Stamina")
-        stats.attributeFocus = stats.attributeFocus + weapon:Get("Focus")
+
     end
     
     ---@param stats any
-    ---@param weapon EdnaFunction
+    ---@param weapon ItemEdna
     function AddAutoAttribute(stats, weapon)
 
+    end
+
+    ---@param stats any
+    ---@param item ItemEdna
+    function AddItemStats(stats, item)
+        stats.statHitRating = stats.statHitRating + item:Get("HitRating")
+        stats.statHeavyRating = stats.statHeavyRating + item:Get("HeavyRating")
+        stats.statAttackPowerRating = stats.statAttackPowerRating + item:Get("AttackPowerRating")
+        stats.statSpecialRating = stats.statSpecialRating + item:Get("SpecialRating")
+        stats.statParryRating = stats.statParryRating + item:Get("ParryRating")
+        stats.statPeneRating = stats.statPeneRating + item:Get("PeneRating")
+        stats.attributeStrength = stats.attributeStrength + item:Get("Strength")
+        stats.statStamina = stats.statStamina + item:Get("Stamina")
+        stats.attributeFocus = stats.attributeFocus + item:Get("Focus")
+        stats.attributeDexterity = stats.attributeDexterity + item:Get("Agility")
+        stats.statCritRating = stats.statCritRating + item:Get("CritHitRating")
+        stats.statCritDmgRating = stats.statCritDmgRating + item:Get("CritDamageRating")
+
+
+        if item.class == "ednaFunction" then
+            --[[@cast item EdnaFunction]]
+            AddWeaponStats(stats, item)
+        end
+    end
+
+    function CalculateBaseAttributes(stats)
+        local primary_stat
+        local secondary_stat
+
+        local combat_style = self:Get("combatStyle")
+        if combat_style == 0 then -- Warrior
+            primary_stat = "attributeStrength"
+            secondary_stat = "attributeDexterity"
+        elseif combat_style == 1 then -- Marksman
+            primary_stat = "attributeDexterity"
+            secondary_stat = "attributeFocus"
+        elseif combat_style == 2 then -- Assassin
+            primary_stat = "attributeDexterity"
+            secondary_stat = "attributeStrength"
+        elseif combat_style == 3 then -- Energizer
+            primary_stat = "attributeFocus"
+            secondary_stat = "attributeDexterity"
+        else
+            return
+        end
+
+        stats[primary_stat] = self:Get("lvl") * 3 + self:Get("lvl")
+        stats[secondary_stat] = self:Get("lvl") * 2 + self:Get("lvl")
+        stats.statStamina = BaseStamina[self:Get("lvl")]
+    end
+
+    function CalculateStats(stats)
+        
+    end
+
+    function CalculateDerived(stats)
+        stats.attributeHealth = stats.statStamina * 10
+        stats.attributeHealthRegen = 0
+        stats.statFinalDamageMod = 0
+        stats.statFinalHealingMod = 0
+        stats.statCriticalDamageMod = 0
+        stats.statCritChance = stats.statCritRating / 100
+
+        -- Compute hitpoints
+        stats.hpMax = stats.attributeHealth
+
+        if self:Get("hpCur") > stats.hpMax then
+            stats.hpCur = stats.hpMax
+        end
     end
 
     local stats = {
@@ -159,20 +260,41 @@ Player:On("OnWeaponSelect", function (self, mainhand, offhand)
         statSpecialRating = 0,
         statParryRating = 0,
         statPeneRating = 0,
+        statStamina = 0,
+        statCritRating = 0,
+        statCritDmgRating = 0,
         attributeDexterity = 0,
         attributeStrength = 0,
         attributeWisdom = 0,
         attributeHealth = 0,
         attributeFocus = 0,
+        attributeResilience = 0,
+        attributeEnergy = 0,
+        attributeConstitution = 0,
     }
 
-    if mainhand ~= nil then
-        AddWeaponStats(stats, mainhand)
+    CalculateBaseAttributes(stats)
+
+    --local mainhand = self:GetItem(self:Get("weapon")[1]) --[[@as EdnaFunction]]
+
+    --if mainhand ~= nil then
+    --    AddWeaponStats(stats, mainhand)
+    --end
+
+    for _,v in pairs(self:GetEquipment()) do
+        Log.Debug("Class " .. v.class)
+        local Dump = require("core.dump")
+
+        Dump(getmetatable(v))
+
+        if v.class == "ednaModule" or v.class == "ednaFunction" then
+            --[[@cast v ItemEdna]]
+            AddItemStats(stats, v)
+        end
     end
 
-    if offhand ~= nil then
-        AddWeaponStats(stats, offhand)
-    end
+    CalculateStats(stats)
+    CalculateDerived(stats)
 
     for k,v in pairs(stats) do
         self:Set(k, v)
@@ -282,7 +404,63 @@ Player:On("OnWeaponSelect", function (self, mainhand, offhand)
     --statWepMaxDmg
     --statWepMinDmg
     --statXpMod
-end)
+end
+
+---@param target Player|NpcOtherland
+---@return HitType type
+---@return number damage
+function Player:Attack(target)
+    local hit_table = HitTable:New(self, target)
+
+    local str_bonus = self:Get("attributeStrength") * 0.5
+    local dex_bonus = self:Get("attributeDexterity") * 0.5
+
+    Log.Debug("Player:Attack - Strength bonus: " .. str_bonus)
+    Log.Debug("Player:Attack - Dexterity bonus: " .. dex_bonus)
+    Log.Debug("Player:Attack - Attack power rating: " .. self:Get("statAttackPowerRating"))
+
+
+    local minDamage = self:Get("statWepMinDmg")
+    local maxDamage = self:Get("statWepMaxDmg")
+
+    local base_dmg = math.random(minDamage, maxDamage) 
+
+    Log.Debug("Player:Attack - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
+    
+    local damage = base_dmg + str_bonus + dex_bonus + self:Get("statAttackPowerRating")
+    local hit_type = hit_table:Roll()
+
+    if hit_type == "Miss" then
+        damage = 0
+    elseif hit_type == "Block" then
+        damage = damage / 2
+    elseif hit_type == "Dodge" then
+        damage = 0
+    elseif hit_type == "Parry" then
+        damage = 0
+    elseif hit_type == "Critical" then
+        damage = damage * 1.3
+    end
+
+    damage = damage - target:Get("statAnyDmgReduction")
+
+    Log.Debug("Player:Attack - Damage any reduction: " .. target:Get("statAnyDmgReduction"))
+
+    local armor_reduction = target:Get("statArmorReduction") - self:Get("statPeneBonus")
+
+    Log.Debug("Player:Attack - Armor reduction: " .. armor_reduction)
+
+    damage = damage - armor_reduction
+
+    Log.Debug("Player :Attack - Damage after reduction: " .. damage)
+
+
+    return hit_type, math.max(math.floor(damage), 0)
+end
+
+function Player:CalculateHealCaused(base)
+
+end
 
 ---@param item_id string
 ---@return ItemBase
@@ -637,6 +815,15 @@ end
 ---@param message integer
 function Player:ShowTutorialMessage(message)
     __engine.dialogue.ShowTutorialMessage(self, message)
+end
+
+function Player:ConfirmTravel()
+    __engine.player.ConfirmTravel(self)
+end
+
+---@param zone string
+function Player:TravelToZone(zone)
+    __engine.player.TravelToZone(self, zone)
 end
 
 ---@param portal_id string
