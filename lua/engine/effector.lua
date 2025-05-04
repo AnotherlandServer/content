@@ -353,9 +353,13 @@ local Effectors = {
     
             Log.Debug("EdnaAbility:Effector_damage - Target: " .. target.name)
 
-            local hit_type, damage = effector.source:Attack(target)
+            local hit_type, damage 
             local combat_flags
             local delta_hp_id = nil
+
+            if effector.ability then
+                hit_type, damage = effector.ability:CauseDamage(effector.source, target)
+            end
 
             if damage > 0 then
                 delta_hp_id = __engine.combat.Damage(target, damage)
@@ -508,6 +512,13 @@ function Effector:CreateTargetFactory(def)
                 factoryDef = {
                     type = "self",
                     settings = {}
+                }
+            elseif targetType == "Enemy" then
+                factoryDef = {
+                    type = "none",
+                    settings = {
+                        affectEnemies = true,
+                    }
                 }
             else
                 Log.Err("Effector:CreateTargetFactory - TargetType not found: " .. targetType)

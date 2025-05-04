@@ -24,12 +24,21 @@ function Npc:Init()
     NonClientBase.Init(self)
 
     local lvl = self:Get("lvl")
-    local generalDifficulty = math.max(self:Get("generalDifficulty"), 1)
+    local generalDifficulty = self:Get("generalDifficulty")
 
     Log.Debug("GD " .. generalDifficulty)
 
-    self:Set("hpMax", (HpTable[generalDifficulty].Hitpoints * lvl) * self:Get("HpMod"))
-    self:Set("hpCur", (HpTable[generalDifficulty].Hitpoints * lvl) * self:Get("HpMod"))
+    --- These stats control enemy difficulty and scaling
+    self:Set("hpMax", (HpTable[math.max(generalDifficulty, 1)].Hitpoints * lvl) * self:Get("HpMod"))
+    self:Set("hpCur", (HpTable[math.max(generalDifficulty, 1)].Hitpoints * lvl) * self:Get("HpMod"))
+    self:Set("statArmorReduction", 30 * (lvl - 1))
+    self:Set("statAttackPower", 10 * (lvl - 1))
+    self:Set("statBlockChance", 5 * generalDifficulty)
+    self:Set("statBlockedDamageMod", 0.75)
+    self:Set("statCritChance", 5 * generalDifficulty)
+    self:Set("statCriticalDamageMod", 1.3)
+    self:Set("statCriticalChanceReduction", 2 * generalDifficulty)
+    self:Set("statHitChance", 1 * generalDifficulty)
 end
 
 ---MetaMorph vendor execute

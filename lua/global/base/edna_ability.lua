@@ -6,6 +6,7 @@
 local Class = require("core.class")
 local TargetFactory = require("engine.target_factory")
 local Effector = require("engine.effector")
+local HitTable = require("engine.hit_table")
 
 ---@class EdnaAbility: Skill
 local EdnaAbility = Class(require("core.skill"))
@@ -56,6 +57,60 @@ function EdnaAbility:Channel(source, invocation, request)
     end
 
     return true
+end
+
+---@param attacker Player|NpcOtherland
+---@param defender Player|NpcOtherland
+---@return HitType
+---@return number
+function EdnaAbility:CauseDamage(attacker, defender)
+    local hit_table = HitTable:New(attacker, defender)
+    hit_table:SetCanBeBlocked(self:Get("canBeBlocked"))
+
+    local str_bonus = attacker:Get("attributeStrength") * 0.5
+    local dex_bonus = attacker:Get("attributeDexterity") * 0.5
+
+    Log.Debug("Player:Attack - Strength bonus: " .. str_bonus)
+    Log.Debug("Player:Attack - Dexterity bonus: " .. dex_bonus)
+    Log.Debug("Player:Attack - Attack power rating: " .. attacker:Get("statAttackPowerRating"))
+
+
+    local minDamage = attacker:Get("statWepMinDmg")
+    local maxDamage = attacker:Get("statWepMaxDmg")
+
+    local base_dmg = math.random(minDamage, maxDamage) 
+
+    Log.Debug("Player:Attack - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
+    
+    local damage = base_dmg + str_bonus + dex_bonus + attacker:Get("statAttackPowerRating")
+    local hit_type = hit_table:Roll()
+
+    if hit_type == "Miss" then
+        damage = 0
+    elseif hit_type == "Block" then
+        damage = damage * defender:Get("statBlockedDamageMod")
+    elseif hit_type == "Dodge" then
+        damage = 0
+    elseif hit_type == "Parry" then
+        damage = 0
+    elseif hit_type == "Critical" then
+        damage = damage * attacker:Get("statCriticalDamageMod")
+    end
+
+    damage = damage - defender:Get("statAnyDmgReduction")
+
+    Log.Debug("Player:Attack - Damage any reduction: " .. defender:Get("statAnyDmgReduction"))
+
+    local armor_reduction = defender:Get("statArmorReduction") - attacker:Get("statPeneBonus")
+
+    Log.Debug("Player:Attack - Armor reduction: " .. armor_reduction)
+
+    damage = damage - armor_reduction
+
+    Log.Debug("Player :Attack - Damage after reduction: " .. damage)
+
+
+    return hit_type, math.max(math.floor(damage), 0)
 end
 
 return EdnaAbility

@@ -10,6 +10,7 @@ local AbilityEvent = require("engine.ability_event")
 local Relationship = require("core.relationship")
 local QuestLog = require("engine.quest_log")
 local HitTable = require("engine.hit_table")
+local GetWorld = require("engine.world")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -44,6 +45,7 @@ end
 
 ---@class Player: Entity
 ---@field abilityState? AbilityStateStore
+---@field abilityRetrigger? Timer
 ---@field avatar_id string
 ---@field quest_log QuestLog
 -----@field channelAbility? EdnaAbility
@@ -236,9 +238,8 @@ function Player:RecalculateStats()
     function CalculateDerived(stats)
         stats.attributeHealth = stats.statStamina * 10
         stats.attributeHealthRegen = 0
-        stats.statFinalDamageMod = 0
-        stats.statFinalHealingMod = 0
-        stats.statCriticalDamageMod = 0
+        stats.statFinalDamageMod = 1
+        stats.statFinalHealingMod = 1
         stats.statCritChance = stats.statCritRating / 100
 
         -- Compute hitpoints
@@ -271,6 +272,8 @@ function Player:RecalculateStats()
         attributeResilience = 0,
         attributeEnergy = 0,
         attributeConstitution = 0,
+        statBlockedDamageMod = 0.5,
+        statCriticalDamageMod = 1.3,
     }
 
     CalculateBaseAttributes(stats)
@@ -404,58 +407,6 @@ function Player:RecalculateStats()
     --statWepMaxDmg
     --statWepMinDmg
     --statXpMod
-end
-
----@param target Player|NpcOtherland
----@return HitType type
----@return number damage
-function Player:Attack(target)
-    local hit_table = HitTable:New(self, target)
-
-    local str_bonus = self:Get("attributeStrength") * 0.5
-    local dex_bonus = self:Get("attributeDexterity") * 0.5
-
-    Log.Debug("Player:Attack - Strength bonus: " .. str_bonus)
-    Log.Debug("Player:Attack - Dexterity bonus: " .. dex_bonus)
-    Log.Debug("Player:Attack - Attack power rating: " .. self:Get("statAttackPowerRating"))
-
-
-    local minDamage = self:Get("statWepMinDmg")
-    local maxDamage = self:Get("statWepMaxDmg")
-
-    local base_dmg = math.random(minDamage, maxDamage) 
-
-    Log.Debug("Player:Attack - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
-    
-    local damage = base_dmg + str_bonus + dex_bonus + self:Get("statAttackPowerRating")
-    local hit_type = hit_table:Roll()
-
-    if hit_type == "Miss" then
-        damage = 0
-    elseif hit_type == "Block" then
-        damage = damage / 2
-    elseif hit_type == "Dodge" then
-        damage = 0
-    elseif hit_type == "Parry" then
-        damage = 0
-    elseif hit_type == "Critical" then
-        damage = damage * 1.3
-    end
-
-    damage = damage - target:Get("statAnyDmgReduction")
-
-    Log.Debug("Player:Attack - Damage any reduction: " .. target:Get("statAnyDmgReduction"))
-
-    local armor_reduction = target:Get("statArmorReduction") - self:Get("statPeneBonus")
-
-    Log.Debug("Player:Attack - Armor reduction: " .. armor_reduction)
-
-    damage = damage - armor_reduction
-
-    Log.Debug("Player :Attack - Damage after reduction: " .. damage)
-
-
-    return hit_type, math.max(math.floor(damage), 0)
 end
 
 function Player:CalculateHealCaused(base)
@@ -661,6 +612,41 @@ function Player:CastAbility(ability, request)
         end
     end
 
+    if ability:Get("activationType") == "heldDown" and ability:Get("ChannelTime") == 0 and ability:Get("ChannelIndefinitely") == false and ability:Get("isAutoAttack") == true then
+        Log.Debug("Player:CastAbility - Starting retrigger timer " .. ability.name .. " after " .. executionTime .. "secs")
+
+        self.abilityRetrigger = Timer:Start(self, executionTime + 0.1, 0, function (timer)
+            Log.Debug("Player:CastAbility - Retriggering ability " .. ability.name)
+
+            local target = self:GetTarget()
+
+            if target == nil then
+                Log.Debug("Player:CastAbility - No target found")
+            else
+                Log.Debug("Player:CastAbility - Target found " .. target.name)
+            end
+
+            if target == nil or (target.class ~= "player" and target.class ~= "npcOtherland") then
+                target = nil
+            end
+
+            --[[@cast target Player|NpcOtherland]]
+
+            ---@type AbilityRequest
+            local request = {
+                target = target,
+                item = request.item,
+                ability_id = request.ability_id,
+                reference_id = request.reference_id,
+                combo_stage_id = request.combo_stage_id,
+                prediction_id = 0,
+                toggle_mode = request.toggle_mode,
+            }
+
+            self:CastAbility(ability, request)
+        end)
+    end
+
     local event = AbilityEvent.New(self, "Charge")
     event:SetAbility(ability)
     event:SetTarget(target)
@@ -774,8 +760,6 @@ function Player:CastAbility(ability, request)
                 ability:Use(self, event, request)
         
                 event:Fire() 
-
-                self.abilityState = nil
             end
         end)
     }
@@ -784,6 +768,11 @@ function Player:CastAbility(ability, request)
 end
 
 function Player:CancelAbility()
+    if self.abilityRetrigger ~= nil then
+        self.abilityRetrigger:Stop()
+        self.abilityRetrigger = nil
+    end
+
     if not self.abilityState then
         return true
     end
@@ -808,6 +797,8 @@ function Player:CancelAbility()
     end
 
     event:Fire()
+
+    self.abilityState = nil
 
     return true
 end
@@ -918,6 +909,11 @@ end
 ---@return Entity[]
 function Player:GetInterests()
     return __engine.interests.GetInterests(self)
+end
+
+---@return Entity?
+function Player:GetTarget()
+    return GetWorld():GetEntityById(self:Get("target"))
 end
 
 return Player

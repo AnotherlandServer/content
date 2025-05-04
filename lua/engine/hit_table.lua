@@ -8,6 +8,7 @@ local Dump = require("core.dump")
 ---@class HitTable
 ---@field attacker Player|NpcOtherland
 ---@field defender Player|NpcOtherland
+---@field canBeBlocked boolean
 local HitTable = {}
 
 --- Compute hit chance penalty table
@@ -36,6 +37,9 @@ local HitType = {
     Reflect = 8,
 }
 
+---@param attacker Player|NpcOtherland
+---@param defender Player|NpcOtherland
+---@return HitTable
 function HitTable:New(attacker, defender)
     local obj = {}
 
@@ -43,10 +47,18 @@ function HitTable:New(attacker, defender)
         __index = self
     })
 
+    --[[@cast obj HitTable]]
+
     obj.attacker = attacker
     obj.defender = defender
+    obj.canBeBlocked = true
    
     return obj
+end
+
+---@param value boolean
+function HitTable:SetCanBeBlocked(value)
+    self.canBeBlocked = value
 end
 
 ---@return number
@@ -84,6 +96,10 @@ end
 
 ---@return number
 function HitTable:BlockChance()
+    if self.canBeBlocked == false then
+        return 0
+    end
+
     local block_chance = self.defender:Get("statBlockChance")
 
     block_chance = math.min(block_chance, 100)
