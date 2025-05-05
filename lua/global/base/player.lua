@@ -174,7 +174,6 @@ function Player:RecalculateStats()
     function AddWeaponStats(stats, weapon)
         stats.statWepMaxDmg = stats.statWepMaxDmg + weapon:Get("WepMaxDmg")
         stats.statWepMinDmg = stats.statWepMinDmg + weapon:Get("WepMinDmg")
-
     end
     
     ---@param stats any
@@ -242,13 +241,6 @@ function Player:RecalculateStats()
         stats.statFinalDamageMod = 1
         stats.statFinalHealingMod = 1
         stats.statCritChance = stats.statCritRating / 100
-
-        -- Compute hitpoints
-        stats.hpMax = stats.attributeHealth
-
-        if self:Get("hpCur") > stats.hpMax then
-            stats.hpCur = stats.hpMax
-        end
     end
 
     local stats = {
@@ -279,19 +271,8 @@ function Player:RecalculateStats()
 
     CalculateBaseAttributes(stats)
 
-    --local mainhand = self:GetItem(self:Get("weapon")[1]) --[[@as EdnaFunction]]
-
-    --if mainhand ~= nil then
-    --    AddWeaponStats(stats, mainhand)
-    --end
-
     for _,v in pairs(self:GetEquipment()) do
-        Log.Debug("Class " .. v.class)
-        local Dump = require("core.dump")
-
-        Dump(getmetatable(v))
-
-        if v.class == "ednaModule" or v.class == "ednaFunction" then
+        if v.class == "ednaModule" or (v.class == "ednaFunction" and v.placement_guid == self:Get("weapon")[1]) then
             --[[@cast v ItemEdna]]
             AddItemStats(stats, v)
         end
@@ -300,8 +281,20 @@ function Player:RecalculateStats()
     CalculateStats(stats)
     CalculateDerived(stats)
 
+    if stats.attributeHealth <= 0 then
+        Log.Warn("Player:RecalculateStats - Attribute health is 0 or less")
+        stats.attributeHealth = 1
+    end
+
     for k,v in pairs(stats) do
         self:Set(k, v)
+    end
+
+    -- Compute hitpoints
+    self:Set("hpMax", self:Get("attributeHealth"))
+
+    if self:Get("hpCur") > self:Get("hpMax") then
+        self:Set("hpCur", self:Get("hpMax"))
     end
 
     --attributeAttackPowerPhys
