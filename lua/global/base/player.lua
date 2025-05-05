@@ -17,6 +17,7 @@ local AbilityState = {
     Casting = 0,
     Channeling = 1,
     EndState = 2,
+    Done = 3,
 }
 
 
@@ -731,10 +732,10 @@ function Player:CastAbility(ability, request)
 
                         if ability:Get("endStateDuration") > 0 then
                             self.abilityState.currentTimer = Timer:Start(self, ability:Get("endStateDuration"), 0, function (timer)
-                                self.abilityState = nil
+                                self.abilityState.state = AbilityState.Done
                             end)
                         else
-                            self.abilityState = nil
+                            self.abilityState.state = AbilityState.Done
                         end
                     end
                 end)
@@ -760,6 +761,8 @@ function Player:CastAbility(ability, request)
                 ability:Use(self, event, request)
         
                 event:Fire() 
+
+                self.abilityState.state = AbilityState.Done
             end
         end)
     }
@@ -777,7 +780,7 @@ function Player:CancelAbility()
         return true
     end
 
-    if not self.abilityState.ability:Get("canBeInterrupted") then
+    if not self.abilityState.ability:Get("canBeInterrupted") and self.abilityState.state ~= AbilityState.Done then
         return false
     end
 
