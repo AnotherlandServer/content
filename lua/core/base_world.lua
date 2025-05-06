@@ -69,10 +69,16 @@ function BaseWorld:SpawnPlayer(player)
     player:Spawn()
 end
 
----@param id integer
+---@param id string
 ---@return Entity?
 function BaseWorld:GetEntityById(id)
     return __engine.world.GetEntityById(id)
+end
+
+---@param id AvatarId
+---@return Entity?
+function BaseWorld:GetEntityByAvatarId(id)
+    return __engine.world.GetEntityByAvatarId(id)
 end
 
 ---@param name string
@@ -84,7 +90,13 @@ end
 ---@param id string
 ---@return Entity[]
 function BaseWorld:FindEntitiesByTemplateId(id)
-    return __engine.world.FindAvatarsByTemplateId(id)
+    return __engine.world.FindEntitiesByTemplateId(id)
+end
+
+---@param class string
+---@return Entity[]
+function BaseWorld:FindEntitiesByClass(class)
+    return __engine.world.FindEntitiesByClass(class)
 end
 
 return BaseWorld

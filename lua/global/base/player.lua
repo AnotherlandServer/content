@@ -98,6 +98,46 @@ Player.AddBehavior("travel", function (self, _, dest)
     end
 end)
 
+Player.AddBehavior("respawnnow", function (self, _, variant)
+    Log.Debug("Requesting respawn for player " .. self.name .. " - variant " .. variant)
+
+    if variant == "NearestPortal" then
+        local portals = GetWorld():FindEntitiesByClass("portal")
+        ---@cast portals Portal[]
+
+        local nearest_portal = nil
+
+        for _,v in pairs(portals) do
+            if nearest_portal == nil then
+                nearest_portal = v
+            else
+                local dist1 = (self:GetPosition() - nearest_portal:GetPosition()):Length()
+                local dist2 = (self:GetPosition() - v:GetPosition()):Length()
+
+                if dist2 < dist1 then
+                    nearest_portal = v
+                end
+            end
+        end
+
+        if nearest_portal then
+            Log.Debug("Nearest Portal: " .. nearest_portal.name .. " - " .. nearest_portal.placement_guid)
+
+            self:TravelToPortal(nearest_portal.placement_guid)
+
+            self:Set("hpCur", self:Get("hpMax"))
+            self:Set("alive", true)
+        else
+            Log.Warn("No portals found for respawn")
+        end
+    end
+end)
+
+Player.AddBehavior("promptcooldown", function (self)
+    self:ConsumeCooldown({[1] = "7daff75b-6078-419b-aa75-c06799b21bf8"})
+    self:EmitCooldown({[1] = "7daff75b-6078-419b-aa75-c06799b21bf8"}, 1)   
+end)
+
 function Player:Init()
     self.cancelChannel = false
     self.quest_log = QuestLog:New(self)
@@ -909,7 +949,7 @@ end
 
 ---@return Entity?
 function Player:GetTarget()
-    return GetWorld():GetEntityById(self:Get("target"))
+    return GetWorld():GetEntityByAvatarId(self:Get("target"))
 end
 
 return Player
