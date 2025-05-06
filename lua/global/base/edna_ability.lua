@@ -67,11 +67,6 @@ function EdnaAbility:CauseDamage(attacker, defender)
     local hit_table = HitTable:New(attacker, defender)
     hit_table:SetCanBeBlocked(self:Get("canBeBlocked"))
 
-    local str_bonus = attacker:Get("attributeStrength") * 0.5
-    local dex_bonus = attacker:Get("attributeDexterity") * 0.5
-
-    Log.Debug("Player:Attack - Strength bonus: " .. str_bonus)
-    Log.Debug("Player:Attack - Dexterity bonus: " .. dex_bonus)
     Log.Debug("Player:Attack - Attack power rating: " .. attacker:Get("statAttackPowerRating"))
 
 
@@ -81,9 +76,14 @@ function EdnaAbility:CauseDamage(attacker, defender)
     local base_dmg = math.random(minDamage, maxDamage) 
 
     Log.Debug("Player:Attack - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
+    Log.Debug("Player:Attack - Final damage mod: " .. attacker:Get("statFinalDamageMod"))
     
-    local damage = base_dmg + str_bonus + dex_bonus + attacker:Get("statAttackPowerRating")
+    local damage = (base_dmg + attacker:GetBaseDamage() + attacker:Get("statAttackPowerRating"))
+        * attacker:Get("statFinalDamageMod")
     local hit_type = hit_table:Roll()
+
+    Log.Debug("Player:Attack - Hit type: " .. hit_type)
+    Log.Debug("Player:Attack - Damage before reduction: " .. damage)
 
     if hit_type == "Miss" then
         damage = 0

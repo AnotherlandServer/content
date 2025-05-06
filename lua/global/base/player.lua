@@ -246,28 +246,8 @@ function Player:RecalculateStats()
     end
 
     function CalculateBaseAttributes(stats)
-        local primary_stat
-        local secondary_stat
-
-        local combat_style = self:Get("combatStyle")
-        if combat_style == 0 then -- Warrior
-            primary_stat = "attributeStrength"
-            secondary_stat = "attributeDexterity"
-        elseif combat_style == 1 then -- Marksman
-            primary_stat = "attributeDexterity"
-            secondary_stat = "attributeFocus"
-        elseif combat_style == 2 then -- Assassin
-            primary_stat = "attributeDexterity"
-            secondary_stat = "attributeStrength"
-        elseif combat_style == 3 then -- Energizer
-            primary_stat = "attributeFocus"
-            secondary_stat = "attributeDexterity"
-        else
-            return
-        end
-
-        stats[primary_stat] = self:Get("lvl") * 3 + self:Get("lvl")
-        stats[secondary_stat] = self:Get("lvl") * 2 + self:Get("lvl")
+        stats[self:GetPrimaryStat()] = self:Get("lvl") * 3 + self:Get("lvl")
+        stats[self:GetSecondaryStat()] = self:Get("lvl") * 2 + self:Get("lvl")
         stats.statStamina = BaseStamina[self:Get("lvl")]
     end
 
@@ -278,8 +258,8 @@ function Player:RecalculateStats()
     function CalculateDerived(stats)
         stats.attributeHealth = stats.statStamina * 10
         stats.attributeHealthRegen = 0
-        stats.statFinalDamageMod = 1
-        stats.statFinalHealingMod = 1
+        stats.statFinalDamageMod = 1 + stats.statAttackPowerRating / 250
+        stats.statFinalHealingMod = 1 + stats.statAttackPowerRating / 250
         stats.statCritChance = stats.statCritRating / 100
     end
 
@@ -807,13 +787,15 @@ function Player:CancelAbility()
     if self.abilityRetrigger ~= nil then
         self.abilityRetrigger:Stop()
         self.abilityRetrigger = nil
+
+        return true
     end
 
     if not self.abilityState then
         return true
     end
 
-    if not self.abilityState.ability:Get("canBeInterrupted") and self.abilityState.state ~= AbilityState.Done then
+    if not self.abilityState.ability:Get("canBeInterrupted") and self.abilityState.state < AbilityState.Channeling then
         return false
     end
 
@@ -950,6 +932,45 @@ end
 ---@return Entity?
 function Player:GetTarget()
     return GetWorld():GetEntityByAvatarId(self:Get("target"))
+end
+
+---@return string
+function Player:GetPrimaryStat()
+    if self:Get("combatStyle") == 0 then
+        return "attributeStrength"
+    elseif self:Get("combatStyle") == 1 then
+        return "attributeDexterity"
+    elseif self:Get("combatStyle") == 2 then
+        return "attributeDexterity"
+    elseif self:Get("combatStyle") == 3 then
+        return "attributeFocus"
+    end
+
+    -- Fallback
+    return "attributeStrength"
+end
+
+---@return string
+function Player:GetSecondaryStat()
+    if self:Get("combatStyle") == 0 then
+        return "attributeDexterity"
+    elseif self:Get("combatStyle") == 1 then
+        return "attributeFocus"
+    elseif self:Get("combatStyle") == 2 then
+        return "attributeStrength"
+    elseif self:Get("combatStyle") == 3 then
+        return "attributeDexterity"
+    end
+
+    -- Fallback
+    return "attributeDexterity"
+end
+
+---@return number
+function Player:GetBaseDamage()
+    return 
+        self:Get(self:GetPrimaryStat()) * 0.5 + 
+        self:Get(self:GetSecondaryStat()) * 0.5
 end
 
 return Player
