@@ -362,7 +362,7 @@ local Effectors = {
             end
 
             if damage > 0 then
-                delta_hp_id = __engine.combat.Damage(target, damage)
+                delta_hp_id = __engine.combat.Damage(target, effector.source, damage)
             end
 
             if hit_type == "Critical" then
@@ -405,8 +405,13 @@ local Effectors = {
         
         for _, target in ipairs(targets) do
             ---@cast target Player|NpcOtherland
-    
+
             Log.Debug("EdnaAbility:Effector_heal - Target: " .. target.name)
+
+            if target.class == "npcOtherland" then
+                ---@cast target NpcOtherland
+                target:MoveToTarget(effector.source:GetPosition(), target:Get("runSpeed"), function() end)
+            end
 
             local hit_type
             local heal_amount = 0
@@ -441,7 +446,7 @@ local Effectors = {
                 heal_amount = heal_amount + math.floor(def.addProportionOfSourceBaseHP * (effector.source:Get("hpMax") - effector.source:Get("hpMin")))
             end
 
-            local delta_hp_id = __engine.combat.Heal(target, heal_amount)
+            local delta_hp_id = __engine.combat.Heal(target, effector.source, heal_amount)
 
             effects[#effects + 1] = {
                 target = target,

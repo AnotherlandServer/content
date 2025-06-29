@@ -47,7 +47,7 @@ end
 ---@class Player: Entity
 ---@field abilityState? AbilityStateStore
 ---@field abilityRetrigger? Timer
----@field avatar_id string
+---@field avatar_id AvatarId
 ---@field quest_log QuestLog
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest

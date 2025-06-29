@@ -7,7 +7,7 @@ local Class = require("core.class")
 local Entity = require("core.entity")
 
 ---@class NonClientBase: Entity
----@field avatar_id string
+---@field avatar_id AvatarId
 ---@field placement_guid string
 ---@field template_guid string
 local NonClientBase = Class(Entity)

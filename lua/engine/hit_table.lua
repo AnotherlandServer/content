@@ -153,12 +153,12 @@ function HitTable:Roll()
     local crit_chance = self:CritChance()
     local hit_chance = 100 - miss_chance - block_chance - dodge_chance - parry_chance - crit_chance
     
-    Log.Debug("Miss chance: " .. miss_chance)
-    Log.Debug("Block chance: " .. block_chance)
-    Log.Debug("Dodge chance: " .. dodge_chance)
-    Log.Debug("Parry chance: " .. parry_chance)
-    Log.Debug("Hit chance: " .. hit_chance)
-    Log.Debug("Crit chance: " .. crit_chance)
+    --Log.Debug("Miss chance: " .. miss_chance)
+    --Log.Debug("Block chance: " .. block_chance)
+    --Log.Debug("Dodge chance: " .. dodge_chance)
+    --Log.Debug("Parry chance: " .. parry_chance)
+    --Log.Debug("Hit chance: " .. hit_chance)
+    --Log.Debug("Crit chance: " .. crit_chance)
 
     AddToTable(table, "Miss", self:MissChance())
     AddToTable(table, "Block", self:BlockChance())
@@ -167,9 +167,9 @@ function HitTable:Roll()
     AddToTable(table, "Normal", hit_chance)
     AddToTable(table, "Critical", self:CritChance())
 
-    for i = 1, #table do
-        Log.Debug(i .. " - " .. table[i])
-    end
+    --for i = 1, #table do
+    --    Log.Debug(i .. " - " .. table[i])
+    --end
 
     local roll = math.random(1, 100)
 
