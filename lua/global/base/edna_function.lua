@@ -13,6 +13,8 @@ local Class = require("core.class")
 local EdnaFunction = Class(require("global.base.item_edna"))
 
 function EdnaFunction:Init()
+    Log.Debug("EdnaFunction:Init - Initializing EdnaFunction for " .. self.name)
+
     for _,v in ipairs(self:GetAbilities()) do
         local type = v:Get("abilityType")
 

@@ -3,7 +3,6 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
-local NpcOtherland = require("global.base.npc_otherland")
 local Relationship = require("core.relationship")
 
 --------------------------------------------------------------------------------
@@ -184,6 +183,7 @@ function TargetFactory:GetFilteredInterests()
     end
 
     local Player = require("global.base.player")
+    local NpcOtherland = require("global.base.npc_otherland")
 
     for _,v in ipairs(interests) do
         -- For now we only handle npcs and players. I'm sure there should be more valid targets.

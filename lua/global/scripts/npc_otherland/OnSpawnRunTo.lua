@@ -13,10 +13,12 @@ local OnSpawnRunTo = Class(NpcOtherland)
 OnSpawnRunTo:On("Spawned", 
     ---@param self OnSpawnRunTo
     function(self)
+        Log.Debug(self.name .. ": OnSpawnRunTo")
         local target = GetWorld():GetEntityById(self:Get("tags")) --[[@as NonClientBase?]]
 
         if target then
-            self:MoveToTarget(target:GetPosition(), self:Get("runSpeed"), function () end)
+            self:Set("moveDest", target:GetPosition())
+            self:Set("moveSpeed", self:Get("runSpeed"))
         end
     end)
 

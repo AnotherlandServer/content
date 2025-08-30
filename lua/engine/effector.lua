@@ -410,7 +410,7 @@ local Effectors = {
 
             if target.class == "npcOtherland" then
                 ---@cast target NpcOtherland
-                target:MoveToTarget(effector.source:GetPosition(), target:Get("runSpeed"), function() end)
+                target:MoveToPosition(effector.source:GetPosition(), target:Get("runSpeed"), function() end)
             end
 
             local hit_type

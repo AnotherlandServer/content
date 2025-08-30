@@ -67,23 +67,21 @@ function EdnaAbility:CauseDamage(attacker, defender)
     local hit_table = HitTable:New(attacker, defender)
     hit_table:SetCanBeBlocked(self:Get("canBeBlocked"))
 
-    Log.Debug("Player:Attack - Attack power rating: " .. attacker:Get("statAttackPowerRating"))
+    -- Log.Debug("EdnaAbility:CauseDamage - Attack power rating: " .. attacker:Get("statAttackPower"))
 
 
-    local minDamage = attacker:Get("statWepMinDmg")
-    local maxDamage = attacker:Get("statWepMaxDmg")
-
+    local minDamage, maxDamage = attacker:GetWeaponDamage()
     local base_dmg = math.random(minDamage, maxDamage) 
 
-    Log.Debug("Player:Attack - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
-    Log.Debug("Player:Attack - Final damage mod: " .. attacker:Get("statFinalDamageMod"))
+    -- Log.Debug("EdnaAbility:CauseDamage - Base damage ( " .. minDamage .. " / " .. maxDamage .." ): " .. base_dmg)
+    -- Log.Debug("EdnaAbility:CauseDamage - Final damage mod: " .. attacker:Get("statFinalDamageMod"))
     
-    local damage = (base_dmg + attacker:GetBaseDamage() + attacker:Get("statAttackPowerRating"))
+    local damage = (base_dmg + attacker:GetBaseDamage() + attacker:Get("statAttackPower"))
         * attacker:Get("statFinalDamageMod")
     local hit_type = hit_table:Roll()
 
-    Log.Debug("Player:Attack - Hit type: " .. hit_type)
-    Log.Debug("Player:Attack - Damage before reduction: " .. damage)
+    -- Log.Debug("EdnaAbility:CauseDamage - Hit type: " .. hit_type)
+    -- Log.Debug("EdnaAbility:CauseDamage - Damage before reduction: " .. damage)
 
     if hit_type == "Miss" then
         damage = 0
@@ -99,15 +97,15 @@ function EdnaAbility:CauseDamage(attacker, defender)
 
     damage = damage - defender:Get("statAnyDmgReduction")
 
-    Log.Debug("Player:Attack - Damage any reduction: " .. defender:Get("statAnyDmgReduction"))
+    -- Log.Debug("EdnaAbility:CauseDamage - Damage any reduction: " .. defender:Get("statAnyDmgReduction"))
 
-    local armor_reduction = defender:Get("statArmorReduction") - attacker:Get("statPeneBonus")
+    local armor_reduction = defender:Get("statArmorReduction") - attacker:GetPeneBonus()
 
-    Log.Debug("Player:Attack - Armor reduction: " .. armor_reduction)
+    -- Log.Debug("EdnaAbility:CauseDamage - Armor reduction: " .. armor_reduction)
 
     damage = damage - armor_reduction
 
-    Log.Debug("Player :Attack - Damage after reduction: " .. damage)
+    -- Log.Debug("EdnaAbility:CauseDamage - Damage after reduction: " .. damage)
 
 
     return hit_type, math.max(math.floor(damage), 0)

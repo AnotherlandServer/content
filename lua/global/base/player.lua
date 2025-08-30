@@ -973,4 +973,13 @@ function Player:GetBaseDamage()
         self:Get(self:GetSecondaryStat()) * 0.5
 end
 
+---@return number, number
+function Player:GetWeaponDamage()
+    return self:Get("statWepMinDmg"), self:Get("statWepMaxDmg")
+end
+
+function Player:GetPeneBonus()
+    return self:Get("statPeneBonus")
+end
+
 return Player
