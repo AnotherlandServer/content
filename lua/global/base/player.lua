@@ -3,6 +3,8 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
+--- @module "core.base_quest"
+
 local Class = require("core.class")
 local Entity = require("core.entity")
 local Timer = require("core.timer")
@@ -980,6 +982,35 @@ end
 
 function Player:GetPeneBonus()
     return self:Get("statPeneBonus")
+end
+
+function Player:HasQuestAvailable(questId)
+    local state = self.quest_log:GetQuestState(questId)
+    return state == QuestLog.QuestState.AVAILABLE
+end
+
+function Player:HasQuestInProgress(questId)
+    local state = self.quest_log:GetQuestState(questId)
+    return state == QuestLog.QuestState.IN_PROGRESS
+end
+
+function Player:HasQuestCompleted(questId)
+    local state = self.quest_log:GetQuestState(questId)
+    return state == QuestLog.QuestState.COMPLETED
+end
+
+function Player:HasQuestFinished(questId)
+    local state = self.quest_log:GetQuestState(questId)
+    return state == QuestLog.QuestState.FINISHED
+end
+
+---@param target NonClientBase
+---@param quest BaseQuest
+---@param state QuestMarker
+function Player:UpdateQuestMarker(target, quest, state)
+    Log.Debug("Player:UpdateQuestMarker - " .. self.name .. " - " .. target.name .. " - " .. state)
+
+    __engine.questlog.UpdateQuestMarker(self, target, quest, state)
 end
 
 return Player

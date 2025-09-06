@@ -44,12 +44,10 @@ function Timer:Start(owner, interval, max_duration, callback)
 end
 
 function Timer:Stop()
-    Log.Debug("Stopping timer")
     if self._engine_timer then
         __engine.timer.DestroyTimer(self._engine_timer)
         self._engine_timer = nil
     end
-    Log.Debug("Timer stopped")
 end
 
 return Timer

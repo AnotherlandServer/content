@@ -3,6 +3,8 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
+---@module "core.base_quest"
+
 local Class = require("core.class")
 local Timer = require("core.timer")
 local NonClientBase = require("global.base.non_client_base")
@@ -149,7 +151,7 @@ function UpdateTarget(npc, dt)
     -- Check if we have to switch target
     if currentTarget and npc.threatList[currentTarget.avatar_id] ~= nil and nextTarget ~= nil then 
         if npc.threatList[nextTarget.avatar_id].total / npc.threatList[currentTarget.avatar_id].total > 1.02 then
-            Log.Debug("Npc:UpdateTarget - Switching target from " .. currentTarget.name .. " to " .. nextTarget.name)
+            --Log.Debug("Npc:UpdateTarget - Switching target from " .. currentTarget.name .. " to " .. nextTarget.name)
             npc.currentTarget = nextTarget
             npc:Set("target", nextTarget.avatar_id)
         end
@@ -210,7 +212,7 @@ function GetInTargetRange(npc, dt)
             return Behavior.Result.Success, 0
         end
     elseif npc._pathingState ~= "FINISHED" and npcPos:Distance(targetPos) <= rangeMax then
-        Log.Debug("Npc:GetInTargetRange - Target in rage")
+        --Log.Debug("Npc:GetInTargetRange - Target in rage")
 
         npc:CancelMovement()
         
@@ -252,9 +254,9 @@ function CastAbility(npc, dt)
     local target = npc:GetTarget()
 
     if target == nil then
-        Log.Debug("Npc:CastAbility - No target found")
+        --Log.Debug("Npc:CastAbility - No target found")
     else
-        Log.Debug("Npc:CastAbility - Target found " .. target.name)
+        --Log.Debug("Npc:CastAbility - Target found " .. target.name)
     end
 
     if target == nil or (target.class ~= "player" and target.class ~= "npcOtherland") then
@@ -400,7 +402,7 @@ Npc:On("Spawned",
         local lvl = self:Get("lvl")
         local generalDifficulty = self:Get("generalDifficulty")
 
-        Log.Debug("GD " .. generalDifficulty)
+        --Log.Debug("GD " .. generalDifficulty)
 
         self.threatList = {}
         self.threatRank = {}
@@ -459,7 +461,7 @@ Npc:On("OnDamage",
     ---@param damage number
     ---@param source Player|NpcOtherland
     function(self, damage, source)
-        Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage .. " damage from " .. source.name)
+        --Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage .. " damage from " .. source.name)
 
         if not self.threatList[source.avatar_id] then
             self.threatList[source.avatar_id] = {
@@ -512,13 +514,14 @@ end
 
 Npc:AddBehavior("dovendorexecute", Npc.DoVendorExecute)
 
+---@param player Player
 function Npc:RequestDialogue(player)
-    -- This is a super basic default implementation for just displaying the dialog that's 
-    -- defined for the npc.
-    local dialog_id = self:Get("Dialogs")[0];
+    local quests = self:GetAttachedQuests(player)
 
-    if dialog_id ~= nil then
-        player:ShowDialogue(self, dialog_id)
+    for _, v in pairs(quests) do
+        if v:RunDialogue(player, self) then
+            return
+        end
     end
 end
 
@@ -607,7 +610,7 @@ end
 ---@param weapon EdnaFunction?
 ---@return number
 function Npc:CastAbility(ability, weapon)
-    Log.Debug("Npc:CastAbility - Executing ability " .. ability.name)
+    --Log.Debug("Npc:CastAbility - Executing ability " .. ability.name)
 
     local executionTime = ability:Get("executionTime")
     if weapon then
@@ -704,6 +707,12 @@ end
 
 function Npc:GetPeneBonus()
     return ArmorPeneTable[self:Get("lvl")] or 0
+end
+
+---@param player Player
+---@return BaseQuest[]
+function Npc:GetAttachedQuests(player)
+    return __engine.questlog.GetAttachedQuests(self, player)
 end
 
 return Npc

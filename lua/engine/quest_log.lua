@@ -7,6 +7,15 @@
 ---@field player Player
 local QuestLog = {}
 
+---@enum QuestState
+QuestLog.QuestState = {
+    AVAILABLE = 0,
+    IN_PROGRESS = 1,
+    COMPLETED = 2,
+    FINISHED = 3,
+    UNAVAILABLE = 4,
+}
+
 ---@param player Player
 ---@return QuestLog
 function QuestLog:New(player)
@@ -39,6 +48,17 @@ end
 ---@param questId integer
 function QuestLog:MarkQuestInProgress(questId)
     __engine.questlog.MarkQuestInProgress(self.player, questId)
+end
+
+---@param questId integer
+function QuestLog:MarkQuestFailed(questId)
+    __engine.questlog.MarkQuestFailed(self.player, questId)
+end
+
+---@param questId integer
+---@return QuestState
+function QuestLog:GetQuestState(questId)
+    return __engine.questlog.GetQuestState(self.player, questId)
 end
 
 return QuestLog

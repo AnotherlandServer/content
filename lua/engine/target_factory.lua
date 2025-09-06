@@ -201,7 +201,7 @@ end
 
 ---@return Entity[]
 function TargetFactory:FindTargets_pie()
-    Log.Debug("TargetFactory:FindTargets_pie")
+    --Log.Debug("TargetFactory:FindTargets_pie")
 
     local def = self.def --[[@as PieTargetFactory]]
 
@@ -210,10 +210,10 @@ function TargetFactory:FindTargets_pie()
     local rotation 
     
     if self.rotationOverride then
-        Log.Debug("TargetFactory:FindTargets_pie - Using target rotation")
+        --Log.Debug("TargetFactory:FindTargets_pie - Using target rotation")
         rotation = self.rotationOverride
     else
-        Log.Debug("TargetFactory:FindTargets_pie - Using source rotation")
+        --Log.Debug("TargetFactory:FindTargets_pie - Using source rotation")
         rotation = self.source:GetRotation()
     end
 
@@ -248,7 +248,7 @@ function TargetFactory:FindTargets_pie()
         if direction:Length() >= radius_min and direction:Length() <= radius_max then
             local angle_between = forward:AngleBetween(direction:WithY(0):Normalize())
 
-            Log.Debug("TargetFactory:FindTargets_pie - Angle: " .. angle_between .. " / " .. angle / 2)
+            --Log.Debug("TargetFactory:FindTargets_pie - Angle: " .. angle_between .. " / " .. angle / 2)
 
             if angle_between < angle / 2 then
                 table.insert(result, v)
@@ -261,7 +261,7 @@ end
 
 ---@return Entity[]
 function TargetFactory:FindTargets_circle()
-    Log.Debug("TargetFactory:FindTargets_circle")
+    --Log.Debug("TargetFactory:FindTargets_circle")
 
     local def = self.def --[[@as CircleTargetFactory]]
 

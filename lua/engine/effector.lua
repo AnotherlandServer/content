@@ -351,7 +351,7 @@ local Effectors = {
                 goto continue
             end
     
-            Log.Debug("EdnaAbility:Effector_damage - Target: " .. target.name)
+            --Log.Debug("EdnaAbility:Effector_damage - Target: " .. target.name)
 
             local hit_type, damage 
             local combat_flags
@@ -406,7 +406,7 @@ local Effectors = {
         for _, target in ipairs(targets) do
             ---@cast target Player|NpcOtherland
 
-            Log.Debug("EdnaAbility:Effector_heal - Target: " .. target.name)
+            --Log.Debug("EdnaAbility:Effector_heal - Target: " .. target.name)
 
             if target.class == "npcOtherland" then
                 ---@cast target NpcOtherland
