@@ -58,6 +58,8 @@ end
 ---@param player Player
 ---@param target NonClientBase
 function BaseQuest:UpdateQuestMarker(player, target)
+    Log.Debug("Updating quest marker for player " .. player.name .. " and target " .. target.name .. " - state " .. player.quest_log:GetQuestState(self.id))
+
     if player:HasQuestAvailable(self.id) then
         for _, qg in ipairs(self.questgivers) do
             if target.name == qg then
@@ -67,17 +69,17 @@ function BaseQuest:UpdateQuestMarker(player, target)
     elseif player:HasQuestInProgress(self.id) then
         for _, qr in ipairs(self.questreceivers) do
             if target.name == qr then
-                player:UpdateQuestMarker(target, BaseQuest.QuestMarker.QuestReceiverIncomplete)
+                player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestReceiverIncomplete)
             end
         end
     elseif player:HasQuestCompleted(self.id) then
         for _, qr in ipairs(self.questreceivers) do
             if target.name == qr then
-                player:UpdateQuestMarker(target, BaseQuest.QuestMarker.QuestReceiverComplete)
+                player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestReceiverComplete)
             end
         end
     else
-        player:UpdateQuestMarker(target, BaseQuest.QuestMarker.None)
+        player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.None)
     end
 end
 
@@ -101,6 +103,8 @@ function BaseQuest:RunDialogue(player, speaker)
                 end
             end
         end
+
+        return self:RunObjectiveDialogue(player, speaker)
     elseif player:HasQuestCompleted(self.id) then
         for _, qr in ipairs(self.questreceivers) do
             if speaker.name == qr then
@@ -134,6 +138,14 @@ end
 ---@param speaker NpcOtherland
 ---@return boolean handled
 function BaseQuest:RunCompletedDialogue(player, speaker)
+    -- Default implementation does nothing
+    return false
+end
+
+---@param player Player
+---@param speaker NpcOtherland
+---@return boolean handled
+function BaseQuest:RunObjectiveDialogue(player, speaker)
     -- Default implementation does nothing
     return false
 end

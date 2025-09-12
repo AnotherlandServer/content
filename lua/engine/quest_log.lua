@@ -9,11 +9,11 @@ local QuestLog = {}
 
 ---@enum QuestState
 QuestLog.QuestState = {
-    AVAILABLE = 0,
-    IN_PROGRESS = 1,
-    COMPLETED = 2,
-    FINISHED = 3,
-    UNAVAILABLE = 4,
+    AVAILABLE = "AVAILABLE",
+    IN_PROGRESS = "IN_PROGRESS",
+    COMPLETED = "COMPLETED",
+    FINISHED = "FINISHED",
+    UNAVAILABLE = "UNAVAILABLE",
 }
 
 ---@param player Player
