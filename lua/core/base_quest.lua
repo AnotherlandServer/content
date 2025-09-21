@@ -7,7 +7,29 @@
 ---@module "global.base.player"
 ---@module "global.base.npc_otherland"
 
+local AvatarFilter = require("engine.avatar_filter")
+
 local Class = require("core.class")
+
+---@class BaseCondition
+---@field id number
+---@field type string
+---@field required_count number
+---@field package filter AvatarFilter?
+
+---@class InteractCondition: BaseCondition
+---@field type "interact"
+---@field avatar_filter AvatarFilter
+
+---@class DialogCondition: BaseCondition
+---@field type "dialog"
+---@field dialog_id number
+
+---@alias Condition InteractCondition | DialogCondition
+
+---@class ConditionProgress
+---@field condition Condition
+---@field count number
 
 ---@class BaseQuest: Class
 ---@field id number
@@ -17,19 +39,19 @@ local Class = require("core.class")
 ---@field bit_reward? number
 ---@field item_reward? string| { assassin: string, energizer: string, rage: string, tech: string }
 ---@field preconditions? { level?: number, quests_finished?: number[] }
----@field questgivers string[]
----@field questreceivers string[]
+---@field questgiver? AvatarFilter
+---@field progress_dialogue? number
+---@field completion_dialogue? number
+---@field conditions? Condition[]
+---@field private progress_filter? AvatarFilter
+---@field private completion_filter? AvatarFilter
 local BaseQuest = Class()
-BaseQuest.questgivers = {}
-BaseQuest.questreceivers = {}
 
 ---@enum QuestMarker
 BaseQuest.QuestMarker = {
     None = 0,
     QuestGiver = 1,
-    QuestTarget = 2,
-    QuestReceiverIncomplete = 3,
-    QuestReceiverComplete = 4,
+    QuestRelevant = 2,
 }
 
 ---@param player Player
@@ -61,21 +83,20 @@ function BaseQuest:UpdateQuestMarker(player, target)
     Log.Debug("Updating quest marker for player " .. player.name .. " and target " .. target.name .. " - state " .. player.quest_log:GetQuestState(self.id))
 
     if player:HasQuestAvailable(self.id) then
-        for _, qg in ipairs(self.questgivers) do
-            if target.name == qg then
-                player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestGiver)
-            end
+        if self.questgiver and self.questgiver:TestEntity(target) then
+            player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestGiver)
         end
     elseif player:HasQuestInProgress(self.id) then
-        for _, qr in ipairs(self.questreceivers) do
-            if target.name == qr then
-                player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestReceiverIncomplete)
-            end
-        end
-    elseif player:HasQuestCompleted(self.id) then
-        for _, qr in ipairs(self.questreceivers) do
-            if target.name == qr then
-                player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestReceiverComplete)
+        if self.progress_filter and self.progress_filter:TestEntity(target) then
+            player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
+        elseif self.completion_filter and self.completion_filter:TestEntity(target) then
+            player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
+        else
+            for _, condition in ipairs(self.conditions or {}) do
+                if condition.avatar_filter:TestEntity(target) then
+                    player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
+                    return
+                end
             end
         end
     else
@@ -88,29 +109,23 @@ end
 ---@return boolean handled
 function BaseQuest:RunDialogue(player, speaker)
     if player:HasQuestAvailable(self.id) then
-        for _, qg in ipairs(self.questgivers) do
-            if speaker.name == qg then
-                if self:RunOfferDialogue(player, speaker) then
-                    return true
-                end
+        if self.questgiver:TestEntity(speaker) then
+            if self:RunOfferDialogue(player, speaker) then
+                return true
             end
         end
     elseif player:HasQuestInProgress(self.id) then
-        for _, qr in ipairs(self.questreceivers) do
-            if speaker.name == qr then
-                if self:RunAcceptedDialogue(player, speaker) then
-                    return true
-                end
+        if self.progress_filter:TestEntity(speaker) then
+            if self:RunAcceptedDialogue(player, speaker) then
+                return true
             end
         end
 
-        return self:RunObjectiveDialogue(player, speaker)
-    elseif player:HasQuestCompleted(self.id) then
-        for _, qr in ipairs(self.questreceivers) do
-            if speaker.name == qr then
-                if self:RunCompletedDialogue(player, speaker) then
-                    return true
-                end
+        return self:RunProgressionDialogue(player, speaker)
+    elseif player:HasQuestCompleted(self.id) and self.completion_filter then
+        if self.completion_filter:TestEntity(speaker) then
+            if self:RunCompletedDialogue(player, speaker) then
+                return true
             end
         end
     end
@@ -145,7 +160,7 @@ end
 ---@param player Player
 ---@param speaker NpcOtherland
 ---@return boolean handled
-function BaseQuest:RunObjectiveDialogue(player, speaker)
+function BaseQuest:RunProgressionDialogue(player, speaker)
     -- Default implementation does nothing
     return false
 end
@@ -165,6 +180,47 @@ end
 ---@param dialogue DialogueNode[]
 function BaseQuest:ExecuteDialogue(player, speaker, id, dialogue)
     return __engine.dialogue.ExecuteDialogue(player, speaker, id, dialogue)
+end
+
+function BaseQuest:Init()
+    __engine.questlog.UpdateQuest(self)
+
+    for _, condition in ipairs(self.conditions or {}) do
+        if condition.type == "interact" then
+            condition.filter = condition.avatar_filter
+        elseif condition.type == "dialog" then
+            condition.filter = AvatarFilter.FindByDialog(condition.dialog_id)
+        else
+            error("Unknown condition type: " .. condition.type)
+        end
+    end
+    
+    if self.progress_dialogue then
+        self.progress_filter = AvatarFilter.FindByDialog(self.progress_dialogue)
+    end
+
+    if self.completion_dialogue then
+        self.completion_filter = AvatarFilter.FindByDialog(self.completion_dialogue)
+    end
+end
+
+function BaseQuest:HotReload()
+    self:Init()
+end
+
+---@param player Player
+---@return ConditionProgress[]
+function BaseQuest:ActiveConditions(player)
+    local result = {}
+
+    for _, condition in ipairs(self.conditions or {}) do
+        table.insert(result, {
+            condition = condition,
+            count = 0,
+        })
+    end
+
+    return result
 end
 
 return BaseQuest
