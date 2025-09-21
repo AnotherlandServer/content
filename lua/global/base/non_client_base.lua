@@ -62,4 +62,8 @@ function NonClientBase:GetInterests()
     return __engine.interests.GetInterests(self)
 end
 
+function NonClientBase:Despawn()
+    __engine.loader.DespawnAvatar(self)
+end
+
 return NonClientBase
