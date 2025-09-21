@@ -25,8 +25,8 @@ function Entity:Get(...)
     end
 end
 
----@overload fun(self:Entity, key:string): any
 ---@overload fun(self:Entity, key:string, value:any): any
+---@overload fun(self:Entity, player:Player, key:string, value:any): any
 function Entity:Set(...)
     if type(select(1, ...)) == "string" then
         return __engine.gameobject.Set(self, select(1, ...), select(2, ...))
