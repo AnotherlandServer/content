@@ -16,6 +16,7 @@ local Class = require("core.class")
 ---@field type string
 ---@field required_count number
 ---@field package filter AvatarFilter?
+---@field package beacon NonClientBase?
 
 ---@class InteractCondition: BaseCondition
 ---@field type "interact"
@@ -192,6 +193,10 @@ function BaseQuest:Init()
             condition.filter = AvatarFilter.FindByDialog(condition.dialog_id)
         else
             error("Unknown condition type: " .. condition.type)
+        end
+
+        if not condition.beacon and condition.avatar_filter then
+            condition.beacon = GetWorld():FindEntitiesWithFilter(condition.avatar_filter)[1] --[[@as NonClientBase]]
         end
     end
     
