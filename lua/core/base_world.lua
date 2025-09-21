@@ -3,6 +3,8 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
+---@module "engine.avatar_filter"
+
 local Class = require("core.class")
 local Events = require("core.events")
 
@@ -97,6 +99,42 @@ end
 ---@return Entity[]
 function BaseWorld:FindEntitiesByClass(class)
     return __engine.world.FindEntitiesByClass(class)
+end
+
+---@param filter AvatarFilter
+---@return Entity[]
+function BaseWorld:FindEntitiesWithFilter(filter)
+    if filter.type == "Content" then
+        return self:FindEntitiesByTemplateId(filter.filter --[[@as string]])
+    elseif filter.type == "Instance" then
+        local ent = self:GetEntityById(filter.filter --[[@as string]])
+        if ent then
+            return { ent }
+        end
+        return {}
+    else
+        error("Unsupported filter type: " .. tostring(filter.type))
+    end
+end
+---@return number -- World time in seconds
+function BaseWorld:CurrentTime()
+    return __engine.world.GetCurrentTime()
+end
+
+---@param name string
+---@param template string
+---@param owner? Entity
+---@param position Vector
+---@param rotation Vector
+---@param params? table
+---@param callback? fun(err: string?, ent: Entity?)
+function BaseWorld:RequestSpawnAvatar(name, template, owner, position, rotation, params, callback)
+    params = params or {}
+
+    params["pos"] = position
+    params["rot"] = rotation
+
+    __engine.loader.RequestSpawnInstance(owner, template, name, params, callback)
 end
 
 return BaseWorld
