@@ -40,7 +40,19 @@ function Quest:OnQuestAccepted(player)
     local sellars = GetWorld():FindEntitiesWithFilter(self.questgiver)[1] --[[@as NpcOtherland]]
     local container = GetWorld():FindEntitiesWithFilter(self.conditions[1].avatar_filter)[1] --[[@as NpcOtherland]]
 
+    sellars:Set("target", container.avatar_id)
+
     GetWorld():RequestSpawnAvatar("SpawnVfx", "GE_01_BallSpawnVFX_lua", nil, container:GetPosition(), Vector.ZERO)
+end
+
+function Quest:OnQuestCompleted(player)
+    local sellars = GetWorld():FindEntitiesWithFilter(self.questgiver)[1] --[[@as NpcOtherland]]
+    sellars:Set("target", NULL_AVATAR_ID)
+end
+
+function Quest:OnQuestAbandoned(player)
+    local sellars = GetWorld():FindEntitiesWithFilter(self.questgiver)[1] --[[@as NpcOtherland]]
+    sellars:Set("target", NULL_AVATAR_ID)
 end
 
 return Quest
