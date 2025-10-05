@@ -25,15 +25,22 @@ Quest.conditions = {
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@return boolean handled
-function Quest:RunOfferDialogue(player, speaker)
-    Quest:ExecuteDialogue(player, speaker, 1350, {
+---@return DialogueNode[]
+function Quest:GetOfferDialogue(player, speaker)
+    return {
         { content_id = 13502, choices = { { choice_emote = "TellMore", next_index = 1 } } },
         { content_id = 13503, choices = { { choice_emote = "TellMore", next_index = 2 } } },
         { content_id = 13504, choices = {}, quest_id = self.id },
-    })
+    }
+end
 
-    return true
+---@param player Player
+---@param speaker NpcOtherland
+---@return DialogueNode[]
+function Quest:RunCompletedDialogue(player, speaker)
+    return {
+        { content_id = 10892, choices = { { choice_emote = "TellMore" } } },
+    }
 end
 
 function Quest:OnQuestAccepted(player)

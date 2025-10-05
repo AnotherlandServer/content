@@ -5,6 +5,7 @@
 
 local Class = require("core.class")
 local Entity = require("core.entity")
+local Interaction = require("engine.interaction")
 
 ---@class NonClientBase: Entity
 ---@field avatar_id AvatarId
@@ -64,6 +65,21 @@ end
 
 function NonClientBase:Despawn()
     __engine.loader.DespawnAvatar(self)
+end
+
+---@param player Player
+---@param type "interact"
+function NonClientBase:RequestInteraction(player, type)
+    local interactionDuration = self:Get("InteractionDuration");
+    if interactionDuration then
+        Interaction.Interact(player, self, interactionDuration):Send()
+    end
+end
+
+---@param player Player
+---@return BaseQuest[]
+function NonClientBase:GetAttachedQuests(player)
+    return __engine.questlog.GetAttachedQuests(self, player)
 end
 
 return NonClientBase

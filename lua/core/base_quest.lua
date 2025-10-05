@@ -111,21 +111,26 @@ end
 function BaseQuest:RunDialogue(player, speaker)
     if player:HasQuestAvailable(self.id) then
         if self.questgiver:TestEntity(speaker) then
-            if self:RunOfferDialogue(player, speaker) then
+            local dialogue = self:GetOfferDialogue(player, speaker)
+            if dialogue and #dialogue > 0 then
+                self:ExecuteDialogue(player, speaker, false, dialogue)
+
                 return true
             end
         end
     elseif player:HasQuestInProgress(self.id) then
         if self.progress_filter:TestEntity(speaker) then
-            if self:RunAcceptedDialogue(player, speaker) then
+            local dialogue = self:GetProgressionDialogue(player, speaker)
+            if dialogue and #dialogue > 0 then
+                self:ExecuteDialogue(player, speaker, false, dialogue)
                 return true
             end
         end
-
-        return self:RunProgressionDialogue(player, speaker)
     elseif player:HasQuestCompleted(self.id) and self.completion_filter then
         if self.completion_filter:TestEntity(speaker) then
-            if self:RunCompletedDialogue(player, speaker) then
+            local dialogue = self:GetCompletedDialogue(player, speaker)
+            if dialogue and #dialogue > 0 then
+                self:ExecuteDialogue(player, speaker, true, dialogue)
                 return true
             end
         end
@@ -136,51 +141,51 @@ end
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@return boolean handled
-function BaseQuest:RunOfferDialogue(player, speaker)
+---@return DialogueNode[]
+function BaseQuest:GetOfferDialogue(player, speaker)
     -- Default implementation does nothing
-    return false
+    return {}
 end
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@return boolean handled
-function BaseQuest:RunAcceptedDialogue(player, speaker)
+---@return DialogueNode[]
+function BaseQuest:GetAcceptedDialogue(player, speaker)
     -- Default implementation does nothing
-    return false
+    return {}
 end
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@return boolean handled
-function BaseQuest:RunCompletedDialogue(player, speaker)
+---@return DialogueNode[]
+function BaseQuest:GetCompletedDialogue(player, speaker)
     -- Default implementation does nothing
-    return false
+    return {}
 end
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@return boolean handled
-function BaseQuest:RunProgressionDialogue(player, speaker)
+---@return DialogueNode[]
+function BaseQuest:GetProgressionDialogue(player, speaker)
     -- Default implementation does nothing
-    return false
+    return {}
 end
 
 ---@class Choice
 ---@field choice_emote "Close"|"Approve"|"Reject"|"Next"|"TellMore"
----@field next_index number
+---@field next_index? number
+
 
 ---@class DialogueNode
----@field content_id number
 ---@field quest_id? number
 ---@field choices Choice[]
 
 ---@param player Player
 ---@param speaker NpcOtherland
----@param id number
+---@param finish_quest boolean
 ---@param dialogue DialogueNode[]
-function BaseQuest:ExecuteDialogue(player, speaker, id, dialogue)
-    return __engine.dialogue.ExecuteDialogue(player, speaker, id, dialogue)
+function BaseQuest:ExecuteDialogue(player, speaker, finish_quest, dialogue)
+    return __engine.dialogue.ExecuteDialogue(player, speaker, self.id, finish_quest, dialogue)
 end
 
 function BaseQuest:Init()
@@ -221,11 +226,40 @@ function BaseQuest:ActiveConditions(player)
     for _, condition in ipairs(self.conditions or {}) do
         table.insert(result, {
             condition = condition,
-            count = 0,
+            count = __engine.questlog.GetConditionProgress(self, player, condition.id),
         })
     end
 
     return result
+end
+
+---@param player Player
+---@return ConditionProgress|nil
+function BaseQuest:NextCondition(player)
+    return self:ActiveConditions(player)[1]
+end
+
+---@param player Player
+---@param target Player|NonClientBase
+function BaseQuest:InteractionCompleted(player, target)
+    Log.Debug("BaseQuest:InteractionCompleted with target " .. target.name)
+
+    local state = self:NextCondition(player)
+    if not state then
+        return
+    end
+
+    if state.condition.type == "interact" and state.condition.avatar_filter:TestEntity(target) then
+        self:UpdateQuestProgress(player, state.condition.id, "ADD", 1)
+    end
+end
+
+---@param player Player
+---@param condition_id number
+---@param update "ADD"|"REMOVE"|"SET"
+---@param value number
+function BaseQuest:UpdateQuestProgress(player, condition_id, update, value)
+    __engine.questlog.UpdateQuestProgress(player, self.id, condition_id, update, value);
 end
 
 return BaseQuest

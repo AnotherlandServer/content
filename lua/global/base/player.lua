@@ -13,6 +13,7 @@ local Relationship = require("core.relationship")
 local QuestLog = require("engine.quest_log")
 local HitTable = require("engine.hit_table")
 local GetWorld = require("engine.world")
+local Interaction = require("engine.interaction")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -21,7 +22,6 @@ local AbilityState = {
     EndState = 2,
     Done = 3,
 }
-
 
 local HitRatingFactor = 100;
 local CritRatingFactor = 100;
@@ -51,6 +51,7 @@ end
 ---@field abilityRetrigger? Timer
 ---@field avatar_id AvatarId
 ---@field quest_log QuestLog
+---@field activeInteraction? Timer
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest
 -----@field channelTimer? Timer
@@ -209,6 +210,54 @@ Player:On("OnAbilityChannel", function (self)
 Player:On("OnWeaponSelect", function (self, mainhand, offhand)
 
 end)
+
+Player:On("OnInteractionStart",
+    ---@param self Player
+    ---@param target Player|NonClientBase
+    ---@param interaction Interaction
+    function (self, target, interaction)
+        if self.activeInteraction then
+            self.activeInteraction:Stop()
+            self.activeInteraction = nil
+        end
+
+        self.activeInteraction = Timer:Start(self, interaction.duration, 0, function (timer)
+            Interaction.CastComplete(self, target):Send()
+        end)
+    end)
+
+Player:On("OnCastCompleted", 
+    ---@param self Player
+    ---@param target Player|NonClientBase
+    ---@param interaction Interaction
+    function (self, target, interaction)
+        if self.activeInteraction then
+            self.activeInteraction:Stop()
+            self.activeInteraction = nil
+        end
+
+        if target.GetAttachedQuests then
+            ---@cast target NonClientBase
+
+            local quests = target:GetAttachedQuests(self)
+            for _,quest in pairs(quests) do
+                quest:InteractionCompleted(self, target)
+            end
+        end
+    end)
+
+Player:On("OnCastInterrupted", 
+    ---@param self Player
+    ---@param target Player|NonClientBase
+    ---@param interaction Interaction
+    function (self, target, interaction)
+        self:CancelAbility()
+
+        if self.activeInteraction then
+            self.activeInteraction:Stop()
+            self.activeInteraction = nil
+        end
+    end)
 
 function Player:RecalculateStats()
     ---@param stats any
@@ -1011,6 +1060,14 @@ function Player:UpdateQuestMarker(target, quest, state)
     Log.Debug("Player:UpdateQuestMarker - " .. self.name .. " - " .. target.name .. " - " .. state)
 
     __engine.questlog.UpdateQuestMarker(self, target, quest, state)
+end
+
+---@param type "interact"
+---@param target Player|NonClientBase
+function Player:RequestInteraction(type, target)
+    if type == "interact" then
+        target:RequestInteraction(self, type)
+    end
 end
 
 return Player

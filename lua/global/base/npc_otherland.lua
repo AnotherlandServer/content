@@ -523,6 +523,9 @@ function Npc:RequestDialogue(player)
             return
         end
     end
+
+    -- Abort dialogue if no quest handled it
+    __engine.dialogue.AbortDialogue(player)
 end
 
 ---@param other NpcOtherland|Player
@@ -707,12 +710,6 @@ end
 
 function Npc:GetPeneBonus()
     return ArmorPeneTable[self:Get("lvl")] or 0
-end
-
----@param player Player
----@return BaseQuest[]
-function Npc:GetAttachedQuests(player)
-    return __engine.questlog.GetAttachedQuests(self, player)
 end
 
 return Npc
