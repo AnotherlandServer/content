@@ -37,7 +37,7 @@ end
 ---@param player Player
 ---@param speaker NpcOtherland
 ---@return DialogueNode[]
-function Quest:RunCompletedDialogue(player, speaker)
+function Quest:GetCompletedDialogue(player, speaker)
     return {
         { content_id = 10892, choices = { { choice_emote = "TellMore" } } },
     }

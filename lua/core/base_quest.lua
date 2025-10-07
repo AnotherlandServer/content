@@ -100,6 +100,10 @@ function BaseQuest:UpdateQuestMarker(player, target)
                 end
             end
         end
+    elseif player:HasQuestCompleted(self.id) then
+        if self.completion_filter and self.completion_filter:TestEntity(target) then
+            player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
+        end
     else
         player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.None)
     end

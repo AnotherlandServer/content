@@ -76,24 +76,28 @@ end
 
 ---@param ent Player|NonClientBase
 ---@param filter string
+---@return boolean
 function TestInstance(ent, filter)
     return ent.placement_guid == filter
 end
 
 ---@param ent Player|NonClientBase
 ---@param filter string
+---@return boolean
 function TestQuestTags(ent, filter)
     return false
 end
 
 ---@param ent Player|NonClientBase
 ---@param filter string
+---@return boolean
 function TestLootItem(ent, filter)
     return false
 end
 
 ---@param ent Player|NonClientBase
 ---@param filter number
+---@return boolean
 function TestDialog(ent, filter)
     local dialogs = ent:Get("Dialogs")
 
@@ -104,6 +108,8 @@ function TestDialog(ent, filter)
             end
         end
     end
+
+    return false
 end
 
 return AvatarFilter

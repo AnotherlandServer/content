@@ -36,23 +36,8 @@ function QuestLog:MarkQuestAvailable(questId)
 end
 
 ---@param questId integer
-function QuestLog:MarkQuestCompleted(questId)
-    __engine.questlog.MarkQuestCompleted(self.player, questId)
-end
-
----@param questId integer
-function QuestLog:MarkQuestFinished(questId)
-    __engine.questlog.MarkQuestFinished(self.player, questId)
-end
-
----@param questId integer
-function QuestLog:MarkQuestInProgress(questId)
-    __engine.questlog.MarkQuestInProgress(self.player, questId)
-end
-
----@param questId integer
-function QuestLog:MarkQuestFailed(questId)
-    __engine.questlog.MarkQuestFailed(self.player, questId)
+function QuestLog:FailQuest(questId)
+    __engine.questlog.FailQuest(self.player, questId)
 end
 
 ---@param questId integer
