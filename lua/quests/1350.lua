@@ -7,8 +7,10 @@ local Class = require("core.class")
 local BaseQuest = require("core.base_quest")
 local AvatarFilter = require("engine.avatar_filter")
 local GetWorld = require("engine.world")
+local Conditions = require("core.quest_conditions")
+local Dialogue = require("core.quest_dialog")
 
----@class Quest: BaseQuest
+---@class Quest1350: BaseQuest
 local Quest = Class(BaseQuest)
 
 Quest.id = 1350
@@ -20,7 +22,7 @@ Quest.questgiver = AvatarFilter.FindByInstanceId("ab097d08-b8c7-4286-a268-70d4c8
 Quest.progress_dialogue = 1355
 Quest.completion_dialogue = 1355
 Quest.conditions = {
-    { id = 0, type = "interact", required_count = 1, avatar_filter = AvatarFilter.FindByContentId("00e4c508-c07d-4ee1-aeda-a136e1d736d5") },
+    Conditions.Interact(1, AvatarFilter.FindByContentId("00e4c508-c07d-4ee1-aeda-a136e1d736d5")),
 }
 
 ---@param player Player
@@ -28,9 +30,9 @@ Quest.conditions = {
 ---@return DialogueNode[]
 function Quest:GetOfferDialogue(player, speaker)
     return {
-        { content_id = 13502, choices = { { choice_emote = "TellMore", next_index = 1 } } },
-        { content_id = 13503, choices = { { choice_emote = "TellMore", next_index = 2 } } },
-        { content_id = 13504, choices = {}, quest_id = self.id },
+        Dialogue.Line(13502):Choice("TellMore"),
+        Dialogue.Line(13503):Choice("TellMore"),
+        Dialogue.Line(13504),
     }
 end
 
@@ -39,7 +41,7 @@ end
 ---@return DialogueNode[]
 function Quest:GetCompletedDialogue(player, speaker)
     return {
-        { content_id = 10892, choices = { { choice_emote = "TellMore" } } },
+        Dialogue.Line(10892):Choice("TellMore"),
     }
 end
 

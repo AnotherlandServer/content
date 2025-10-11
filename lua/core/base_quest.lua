@@ -11,23 +11,6 @@ local AvatarFilter = require("engine.avatar_filter")
 
 local Class = require("core.class")
 
----@class BaseCondition
----@field id number
----@field type string
----@field required_count number
----@field package filter AvatarFilter?
----@field package beacon NonClientBase?
-
----@class InteractCondition: BaseCondition
----@field type "interact"
----@field avatar_filter AvatarFilter
-
----@class DialogCondition: BaseCondition
----@field type "dialog"
----@field dialog_id number
-
----@alias Condition InteractCondition | DialogCondition
-
 ---@class ConditionProgress
 ---@field condition Condition
 ---@field count number
@@ -55,6 +38,30 @@ BaseQuest.QuestMarker = {
     QuestRelevant = 2,
 }
 
+function BaseQuest:Init()
+    __engine.questlog.UpdateQuest(self)
+
+    for idx, condition in ipairs(self.conditions or {}) do
+        condition.id = idx - 1
+
+        if not condition.beacon and condition.avatar_filter then
+            condition.beacon = GetWorld():FindEntitiesWithFilter(condition.avatar_filter)[1] --[[@as NonClientBase]]
+        end
+    end
+    
+    if self.progress_dialogue then
+        self.progress_filter = AvatarFilter.FindByDialog(self.progress_dialogue)
+    end
+
+    if self.completion_dialogue then
+        self.completion_filter = AvatarFilter.FindByDialog(self.completion_dialogue)
+    end
+end
+
+function BaseQuest:HotReload()
+    self:Init()
+end
+
 ---@param player Player
 function BaseQuest:MarkAvailableConditional(player)
     if self:IsAvailable(player) then
@@ -62,9 +69,11 @@ function BaseQuest:MarkAvailableConditional(player)
     end
 end
 
+---@param player Player
+---@return boolean
 function BaseQuest:IsAvailable(player)
     if self.preconditions then
-        if self.preconditions.level and player:Get("level") < self.preconditions.level then
+        if self.preconditions.level and player:Get("lvl") < self.preconditions.level then
             return false
         end
         if self.preconditions.quests_finished then
@@ -81,8 +90,6 @@ end
 ---@param player Player
 ---@param target NonClientBase
 function BaseQuest:UpdateQuestMarker(player, target)
-    Log.Debug("Updating quest marker for player " .. player.name .. " and target " .. target.name .. " - state " .. player.quest_log:GetQuestState(self.id))
-
     if player:HasQuestAvailable(self.id) then
         if self.questgiver and self.questgiver:TestEntity(target) then
             player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestGiver)
@@ -117,6 +124,7 @@ function BaseQuest:RunDialogue(player, speaker)
         if self.questgiver:TestEntity(speaker) then
             local dialogue = self:GetOfferDialogue(player, speaker)
             if dialogue and #dialogue > 0 then
+                dialogue[#dialogue].quest_id = self.id
                 self:ExecuteDialogue(player, speaker, false, dialogue)
 
                 return true
@@ -175,51 +183,12 @@ function BaseQuest:GetProgressionDialogue(player, speaker)
     return {}
 end
 
----@class Choice
----@field choice_emote "Close"|"Approve"|"Reject"|"Next"|"TellMore"
----@field next_index? number
-
-
----@class DialogueNode
----@field quest_id? number
----@field choices Choice[]
-
 ---@param player Player
 ---@param speaker NpcOtherland
 ---@param finish_quest boolean
 ---@param dialogue DialogueNode[]
 function BaseQuest:ExecuteDialogue(player, speaker, finish_quest, dialogue)
     return __engine.dialogue.ExecuteDialogue(player, speaker, self.id, finish_quest, dialogue)
-end
-
-function BaseQuest:Init()
-    __engine.questlog.UpdateQuest(self)
-
-    for _, condition in ipairs(self.conditions or {}) do
-        if condition.type == "interact" then
-            condition.filter = condition.avatar_filter
-        elseif condition.type == "dialog" then
-            condition.filter = AvatarFilter.FindByDialog(condition.dialog_id)
-        else
-            error("Unknown condition type: " .. condition.type)
-        end
-
-        if not condition.beacon and condition.avatar_filter then
-            condition.beacon = GetWorld():FindEntitiesWithFilter(condition.avatar_filter)[1] --[[@as NonClientBase]]
-        end
-    end
-    
-    if self.progress_dialogue then
-        self.progress_filter = AvatarFilter.FindByDialog(self.progress_dialogue)
-    end
-
-    if self.completion_dialogue then
-        self.completion_filter = AvatarFilter.FindByDialog(self.completion_dialogue)
-    end
-end
-
-function BaseQuest:HotReload()
-    self:Init()
 end
 
 ---@param player Player
