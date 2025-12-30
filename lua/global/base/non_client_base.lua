@@ -82,4 +82,30 @@ function NonClientBase:GetAttachedQuests(player)
     return __engine.questlog.GetAttachedQuests(self, player)
 end
 
+---@param anim string
+---@param duration number
+function NonClientBase:PlayAnimation(anim, duration)
+    self:Set("action0", { anim, GetWorld():CurrentTime() })
+    self:Set("action0Duration", duration)
+end
+
+function NonClientBase:CancelAnimation()
+    self:Set("action0", { "", 0 })
+    self:Set("action0Duration", 0)
+end
+
+---@param player Player
+---@param anim string
+---@param duration number
+function NonClientBase:PlayAnimationForPlayer(player, anim, duration)
+    self:Set(player, "action0", { anim, GetWorld():CurrentTime() })
+    self:Set(player, "action0Duration", duration)
+end
+
+---@param player Player
+function NonClientBase:CancelAnimationForPlayer(player)
+    self:Set(player, "action0", { "", 0 })
+    self:Set(player, "action0Duration", 0)
+end
+
 return NonClientBase

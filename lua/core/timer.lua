@@ -43,6 +43,14 @@ function Timer:Start(owner, interval, max_duration, callback)
     return instance
 end
 
+---@param owner Entity
+---@param delay number
+---@param callback fun()
+---@return Timer
+function Timer:SingleShot(owner, delay, callback)
+    return Timer:Start(owner, delay, delay, callback)
+end
+
 function Timer:Stop()
     if self._engine_timer then
         __engine.timer.DestroyTimer(self._engine_timer)

@@ -8,7 +8,7 @@
 ---@module "global.base.npc_otherland"
 
 local AvatarFilter = require("engine.avatar_filter")
-
+local Timer = require("core.timer")
 local Class = require("core.class")
 
 ---@class ConditionProgress
@@ -29,6 +29,7 @@ local Class = require("core.class")
 ---@field conditions? Condition[]
 ---@field private progress_filter? AvatarFilter
 ---@field private completion_filter? AvatarFilter
+---@field private timers table<Player, Timer>
 local BaseQuest = Class()
 
 ---@enum QuestMarker
@@ -39,6 +40,8 @@ BaseQuest.QuestMarker = {
 }
 
 function BaseQuest:Init()
+    self.timers = {}
+
     __engine.questlog.UpdateQuest(self)
 
     for idx, condition in ipairs(self.conditions or {}) do
@@ -66,6 +69,7 @@ end
 function BaseQuest:MarkAvailableConditional(player)
     if self:IsAvailable(player) then
         player.quest_log:MarkQuestAvailable(self.id)
+        Log.Debug("Marked quest " .. self.id .. " as available for player " .. player.name)
     end
 end
 
@@ -101,7 +105,7 @@ function BaseQuest:UpdateQuestMarker(player, target)
             player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
         else
             for _, condition in ipairs(self.conditions or {}) do
-                if condition.avatar_filter:TestEntity(target) then
+                if condition.avatar_filter and condition.avatar_filter:TestEntity(target) then
                     player:UpdateQuestMarker(target, self, BaseQuest.QuestMarker.QuestRelevant)
                     return
                 end
@@ -233,6 +237,62 @@ end
 ---@param value number
 function BaseQuest:UpdateQuestProgress(player, condition_id, update, value)
     __engine.questlog.UpdateQuestProgress(player, self.id, condition_id, update, value);
+end
+
+---@param player Player
+---@return number
+function BaseQuest:GetLastConditionUpdateTime(player)
+    return __engine.questlog.GetLastConditionUpdateTime(self.id, player)
+end
+
+function BaseQuest:AttachToPlayer(player)
+    self:InitTimers(player)
+end
+
+function BaseQuest:DetachFromPlayer(player)
+    local timer = self.timers[player]
+    if timer then
+        timer:Stop()
+        self.timers[player] = nil
+    end
+end
+
+function BaseQuest:StateUpdated(player)
+    if player:HasQuestCompleted(self.id) and not self.completion_dialogue then
+        self:DetachFromPlayer(player)
+        self:ReturnQuest(player)
+        return
+    end
+
+    self:InitTimers(player)
+end
+
+function BaseQuest:InitTimers(player)
+    if not player:HasQuestInProgress(self.id) then
+        return
+    end
+
+    local current_condition = self:NextCondition(player)
+
+    if current_condition then
+        local timer = self.timers[player]
+        if timer then
+            -- Timer already exists
+            return
+        end
+
+        if current_condition.condition.type == "wait" then
+            timer = Timer:SingleShot(player, current_condition.condition.seconds, function()
+                self:UpdateQuestProgress(player, current_condition.condition.id, "SET", 1)
+                self.timers[player] = timer
+            end)
+        end
+    end
+end
+
+---@param player Player
+function BaseQuest:ReturnQuest(player)
+    __engine.questlog.ReturnQuest(self, player)
 end
 
 return BaseQuest
