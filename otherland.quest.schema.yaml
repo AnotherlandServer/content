@@ -250,6 +250,32 @@ $defs:
         properties:
           content_guid:
             $ref: "#/$defs/uuid"
+      - type: object
+        additionalProperties: false
+        required: [quest_tags]
+        properties:
+          quest_tags:
+            description: >
+              Quest tags to filter by
+            type: array
+            items:
+              type: string
+      - type: object
+        additionalProperties: false
+        required: [item_id]
+        properties:
+          item_id:
+            description: >
+              Item GUIDs to filter by
+            $ref: "#/$defs/uuid"
+      - type: object
+        additionalProperties: false
+        required: [dialogue_id]
+        properties:
+          dialogue_id:
+            description: >
+              Dialogue ID to filter by
+            type: integer
   interactTrigger:
     type: object
     additionalProperties: false
