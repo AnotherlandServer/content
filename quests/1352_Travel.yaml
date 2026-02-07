@@ -14,8 +14,8 @@ progress_dialogue_id: 1355
 prerequisites:
   quests_finished:
     - 1350
-conditions:
-  - id: 0
-    required_count: 1
-    trigger:
-      timeout: 5
+stages:
+  - - id: 0
+      required_count: 1
+      trigger:
+        timeout: 5

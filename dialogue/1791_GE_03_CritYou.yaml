@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1791
+branches:
+  - selector:
+      quests_completed: [ 1419 ] # First Steps
+    lines:
+      - # Finally, a friendly face. Did Sellars send you?
+        line: 13513 
+        quest: 1419
+  - selector:
+      quests_available:
+        - 1421 # Rescue mission
+    lines:
+      - # Don't worry about me, I'll be alright, but I don't know if I can say the same for RageGunzzz and Laygolahz15.
+        8124
+      - # I found them here. They got pulled in here just like us. We were attacked by some strange creatures. I managed to escape but Rage and Lay stayed behind.
+        13514
+      - # They were the more experienced ones in our group, at least when it comes to combat. If we are to make it out of here we will need to group up with them. They shouldn't be far. Just follow the sounds of combat.
+        line: 13515 
+        quest: 1421

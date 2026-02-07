@@ -9,7 +9,7 @@ required:
   - id
   - level
   - world
-  - conditions
+  - stages
 properties:
   id:
     description: >
@@ -210,39 +210,46 @@ properties:
         minLength: 1
         items:
           type: integer
-  conditions:
+  stages:
     type: array
+    description: >
+      Stages of the quest. All conditions in a stage have to be fulfilled
+      to complete it and move on to the next one.
     items:
-      type: object
-      additionalProperties: false
-      required: 
-        - id
-        - required_count
-        - trigger
-      properties:
-        id: 
-          description: >
-            ID of the condition, as referenced by the game files.
-          type: integer
-        required_count:
-          description: >
-            How often this conditions has to be triggered in order to
-            be completed.
-          type: integer
-          exclusiveMinimum: 0
-        beacon:
-          description: >
-            GUID of a beacon associated with this condition.
-          $ref: "#/$defs/uuid"
-        trigger:
-          oneOf:
-            - $ref: "#/$defs/interactTrigger"
-            - $ref: "#/$defs/killTrigger"
-            - $ref: "#/$defs/proximityTrigger"
-            - $ref: "#/$defs/sojournTrigger"
-            - $ref: "#/$defs/dialogueTrigger"
-            - $ref: "#/$defs/timeoutTrigger"
-            - $ref: "#/$defs/itemTrigger"
+      type: array
+      description: >
+        An array of conditions that have to be fulfilled to complete this stage.
+      items:
+        type: object
+        additionalProperties: false
+        required: 
+          - id
+          - required_count
+          - trigger
+        properties:
+          id: 
+            description: >
+              ID of the condition, as referenced by the game files.
+            type: integer
+          required_count:
+            description: >
+              How often this conditions has to be triggered in order to
+              be completed.
+            type: integer
+            exclusiveMinimum: 0
+          beacon:
+            description: >
+              GUID of a beacon associated with this condition.
+            $ref: "#/$defs/uuid"
+          trigger:
+            oneOf:
+              - $ref: "#/$defs/interactTrigger"
+              - $ref: "#/$defs/killTrigger"
+              - $ref: "#/$defs/proximityTrigger"
+              - $ref: "#/$defs/sojournTrigger"
+              - $ref: "#/$defs/dialogueTrigger"
+              - $ref: "#/$defs/timeoutTrigger"
+              - $ref: "#/$defs/itemTrigger"
 $defs:
   uuid:
     type: string
@@ -309,7 +316,15 @@ $defs:
     required: [proximity]
     properties:
       proximity:
-        $ref: "#/$defs/avatarSelector"
+        type: object
+        additionalProperties: false
+        properties:
+          avatar:
+            $ref: "#/$defs/avatarSelector"
+          radius:
+            description: >
+              Radius in units for the proximity trigger.
+            type: number
   sojournTrigger:
     type: object
     additionalProperties: false
@@ -320,9 +335,9 @@ $defs:
   dialogueTrigger:
     type: object
     additionalProperties: false
-    required: [dialog]
+    required: [dialogue]
     properties:
-      dialog:
+      dialogue:
         description: >
           Dialogue ID that has to be finished for this condition to be fulfilled.
         type: integer

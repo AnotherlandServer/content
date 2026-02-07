@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Travel
+# Sellars explained that you are not the only one he summoned to the Otherland network. 
+# He recommended that you find the rest since together it will be far likely that you will get out of the network alive.
+
+id: 1419
+level: 1
+world: GameEntry_P
+exp_reward: 6
+bit_reward: 2
+available_dialogue_id: 1789
+progress_dialogue_id: 1789
+completion_dialogue_id: 1791
+stages:
+  - - id: 0
+      required_count: 1
+      trigger:
+        proximity: 
+          avatar: 
+            instance_guid: 9a620d82-1dd0-4854-b876-974d7240432a
+          radius: 200
+  - - id: 3
+      required_count: 1
+      trigger:
+        dialogue: 1790
+  - - id: 2
+      required_count: 1
+      trigger:
+        proximity: 
+          avatar: 
+            instance_guid: 5abd8ddf-184d-4574-8fa4-d38d22d9ad7b
+          radius: 400

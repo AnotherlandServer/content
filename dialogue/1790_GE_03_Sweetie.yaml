@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1790
+branches:
+  - lines:
+      - # What? Who are you?
+        819  
+      - # Another one? Well I must say, Sellars is close to being a miracle worker but we need a lot more if we are to survive this place.
+        13510
+      - # Me and a couple of simuloids were the first ones to get summoned by Sellars. We were looking for weapons to at least stand a chance against whatever lurks in this simulation but got attacked and split up.
+        13511
+      - # I think we should first focus on grouping up again. Find CritYouInTheFace. I am sure he will know where the rest is.
+        line: 13512
+        choice: approve

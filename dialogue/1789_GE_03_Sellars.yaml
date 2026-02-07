@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1789
+branches:
+  - selector:
+      quests_available:
+        - 1419 # First Steps
+    lines:
+      - # Welcome back. I hope the travel went as smooth for you as it did for me and the rest of the simuloids I summoned.
+        13506
+      - # Right, I apologize. You weren't the only simuloid I brought to Otherland. The task at hand is a very difficult one and we will need all the help we can get.
+        13507
+      - # A small group of them already moved further in the simulation trying to arm themselves for what is to come. I would recommend following them.
+        line: 13508
+        choice: approve
+      - # My quick scans indicate that they are somewhere in this area. Finding them and working together will increase our chance of getting out of this alive.
+        line: 13509
+        quest: 1419
+

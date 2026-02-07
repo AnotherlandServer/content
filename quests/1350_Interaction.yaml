@@ -13,10 +13,10 @@ bit_reward: 2
 available_dialogue_id: 1355
 progress_dialogue_id: 1355
 completion_dialogue_id: 1355
-conditions:
-  - id: 0 # Interact with the summoned box
-    required_count: 1
-    trigger:
-      interact:
-        # GE_01_VirtualBox
-        instance_guid: 4af8fc0d-24e5-4ee8-8870-c236ff12448e
+stages:
+  - - id: 0 # Interact with the summoned box
+      required_count: 1
+      trigger:
+        interact:
+          # GE_01_VirtualBox
+          instance_guid: 4af8fc0d-24e5-4ee8-8870-c236ff12448e
