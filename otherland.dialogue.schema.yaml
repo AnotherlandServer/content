@@ -4,96 +4,115 @@ $id: otherland.dialogue.schema.yaml
 title: "Otherland dialogue schema"
 
 type: object
-required: [id, flow]
+required: [id, branches]
 additionalProperties: false
 properties: 
   id:
     description: > 
       Dialogue ID as referenced in the game files.
     type: integer
-  repeatable:
-    description: >
-      Can this dialogue be repeatedly triggered?
-    type: boolean
-  flow:
-    $ref: "#/$defs/dialogueFlow"
   branches:
-    type: object
-    additionalProperties: false
-    properties:
-      "^\\d+$":
-        $ref: "#/$defs/dialogueFlow"
-
-$defs:
-  dialogueFlow:
-    description: >
-      Dialogue nodes
     type: array
     items:
-      oneOf:
-        - $ref: "#/$defs/dialogueNode"
-        - $ref: "#/$defs/dialogueTransition"
+      $ref: "#/$defs/dialogueBranch"
 
-  dialogueNode:
-    oneOf:
-      - description: >
-          A node representing a dialog line with additional 
-          metadata.
-        type: object
-        additionalProperties: false
-        required: [line]
-        properties:
-          line:
-            description: >
-              Dialogue line referencing DialogText.db/Dialog
-            type: integer
-          animation:
-            description: >
-              Animation to play when display this dialog line
-            $ref: "#/$defs/animations"
-          choices:
-            description: >
-              Instructs the client to display one or more possible 
-              dialogue choices.
-            type: array
-            items:
-              type: object
-              required: [type]
-              additionalProperties: false
-              properties:
-                type:
-                  description: >
-                    Dialogue choice indicator type.
-                  type: string
-                  enum:
-                    - close
-                    - approve
-                    - reject
-                    - next
-                    - tellMore
-                branch:
-                  description: >
-                    Next dialogue branch that should be taken when
-                    this choice is selected.
-                  type: integer
-          quest:
-            description: >
-              Instructs the client to show a quest with the given id to the player.
-            type: integer
-      - description: >
-          Dialogue line referencing DialogText.db/Dialog
-        type: number
-  dialogueTransition:
-    description: >
-      Node representin a transition into another dialogue chain.
+$defs:
+  dialogueBranch:
     type: object
     additionalProperties: false
-    required: [dialogueId]
     properties:
-      dialogueId:
+      selector:
         description: >
-          Dialogue ID to transition to.
-        type: integer
+          Selector for this dialogue branch.
+        type: object
+        additionalProperties: false
+        properties:
+          quests_available:
+            description: >
+              List of quest IDs that must be available to select this branch.
+            type: array
+            items:
+              type: integer
+          quests_in_progress:
+            description: >
+              List of quest IDs that must be in progress to select this branch.
+            type: array
+            items:
+              type: integer
+          quests_completed:
+            description: >
+              List of quest IDs that must be completed to select this branch.
+            type: array
+            items:
+              type: integer
+          quests_finished:
+            description: >
+              List of quest IDs that must be finished to select this branch.
+            type: array
+            items:
+              type: integer
+          quests_upcoming:
+            description: >
+              List of quest IDs that are still upcoming to select this branch.
+            type: array
+            items:
+              type: integer
+          level:
+            description: >
+              Minimum character level required to select this branch.
+            type: integer
+          combat_style:
+            description: >
+              Required combat style to select this branch.
+            type: string
+            enum:
+              - Rage
+              - Tech
+              - Assassin
+              - Energizer
+              - Hacker
+              - Cyber
+              - None
+      lines:
+        type: array
+        items:
+          $ref: "#/$defs/dialogueLine"
+
+  dialogueLine:
+    oneOf:
+    - description: >
+        A node representing a dialog line with additional 
+        metadata.
+      type: object
+      additionalProperties: false
+      required: [line]
+      properties:
+        line:
+          description: >
+            Dialogue line referencing DialogText.db/Dialog
+          type: integer
+        animation:
+          description: >
+            Animation to play when display this dialog line
+          $ref: "#/$defs/animations"
+        choice:
+          description: >
+            Dialogue choice indicator type.
+          type: string
+          enum:
+            - close
+            - approve
+            - reject
+            - next
+            - tellMore
+            - offer
+        quest:
+          description: >
+            Instructs the client to show a quest with the given id to the player.
+          type: integer
+    - description: >
+        Dialogue line referencing DialogText.db/Dialog
+      type: integer
   animations:
     type: string
     enum:

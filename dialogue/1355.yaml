@@ -1,8 +1,29 @@
 # yaml-language-server: $schema=../otherland.dialogue.schema.yaml
-# Dialog for GE_01_Sellars
 id: 1355 
-flow:
-  - 13502 # We are currently in the Otherland network. It might not mean much for you right now but you need to remember one thing - this is not a safe place to be.
-  - 13503 # The means of which I pulled you in here were quite barbaric and you might be experiencing a lot of issues. The good news is that for now you will only need to be able to use the basics of controlling your simuloid.
-  - line: 13504 # First let's check if the Otherland network recognizes your input when it comes to interacting with the world. I will summon a box. Please, try opening it.
-    quest: 1350 # Interaction
+branches:
+  - selector:
+      quests_available:
+        - 1350 # Interaction
+    lines:
+      - # We are currently in the Otherland network. It might not mean much for you right now but you need to remember one thing - this is not a safe place to be.
+        13502 
+      - # The means of which I pulled you in here were quite barbaric and you might be experiencing a lot of issues. The good news is that for now you will only need to be able to use the basics of controlling your simuloid.
+        13503 
+      - # First let's check if the Otherland network recognizes your input when it comes to interacting with the world. I will summon a box. Please, try opening it.
+        line: 13504 
+        quest: 1350 # Interaction
+  - selector:
+      quests_completed:
+        - 1350 # Interaction
+    lines:
+      - # Everything works correctly. I hope you didn't feel any pain, it can often be a side effect.
+        10892
+  - selector:
+      quests_available:
+        - 1352 # Travel
+    lines:
+      - # We must get you ready for the task at hand.  Prepare yourself for a far less serene location.
+        6044
+      - # I will try to open this portal. If I'm right it should still function correctly.
+        line: 13505 
+        quest: 1352 # Travel

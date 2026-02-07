@@ -76,12 +76,6 @@ function NonClientBase:RequestInteraction(player, type)
     end
 end
 
----@param player Player
----@return BaseQuest[]
-function NonClientBase:GetAttachedQuests(player)
-    return __engine.questlog.GetAttachedQuests(self, player)
-end
-
 ---@param anim string
 ---@param duration number
 function NonClientBase:PlayAnimation(anim, duration)

@@ -235,15 +235,6 @@ Player:On("OnCastCompleted",
             self.activeInteraction:Stop()
             self.activeInteraction = nil
         end
-
-        if target.GetAttachedQuests then
-            ---@cast target NonClientBase
-
-            local quests = target:GetAttachedQuests(self)
-            for _,quest in pairs(quests) do
-                quest:InteractionCompleted(self, target)
-            end
-        end
     end)
 
 Player:On("OnCastInterrupted", 

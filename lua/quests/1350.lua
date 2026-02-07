@@ -5,45 +5,10 @@
 
 local Class = require("core.class")
 local BaseQuest = require("core.base_quest")
-local AvatarFilter = require("engine.avatar_filter")
 local GetWorld = require("engine.world")
-local Conditions = require("core.quest_conditions")
-local Dialogue = require("core.quest_dialog")
 
 ---@class Quest1350: BaseQuest
 local Quest = Class(BaseQuest)
-
-Quest.id = 1350
-Quest.level = 1
-Quest.world = "GameEntry_P"
-Quest.exp_reward = 6
-Quest.bit_reward = 2
-Quest.questgiver = AvatarFilter.FindByInstanceId("ab097d08-b8c7-4286-a268-70d4c8e5f372")
-Quest.progress_dialogue = 1355
-Quest.completion_dialogue = 1355
-Quest.conditions = {
-    Conditions.Interact(1, AvatarFilter.FindByContentId("00e4c508-c07d-4ee1-aeda-a136e1d736d5")),
-}
-
----@param player Player
----@param speaker NpcOtherland
----@return DialogueNode[]
-function Quest:GetOfferDialogue(player, speaker)
-    return {
-        Dialogue.Line(13502):Choice("TellMore"),
-        Dialogue.Line(13503):Choice("TellMore"),
-        Dialogue.Line(13504),
-    }
-end
-
----@param player Player
----@param speaker NpcOtherland
----@return DialogueNode[]
-function Quest:GetCompletedDialogue(player, speaker)
-    return {
-        Dialogue.Line(10892):Choice("TellMore"),
-    }
-end
 
 ---@param player Player
 function Quest:OnQuestAccepted(player)

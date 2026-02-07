@@ -514,20 +514,6 @@ end
 
 Npc:AddBehavior("dovendorexecute", Npc.DoVendorExecute)
 
----@param player Player
-function Npc:RequestDialogue(player)
-    local quests = self:GetAttachedQuests(player)
-
-    for _, v in pairs(quests) do
-        if v:RunDialogue(player, self) then
-            return
-        end
-    end
-
-    -- Abort dialogue if no quest handled it
-    __engine.dialogue.AbortDialogue(player)
-end
-
 ---@param other NpcOtherland|Player
 ---@return Affiliation
 function Npc:RelationshipTo(other)
