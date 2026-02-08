@@ -122,19 +122,20 @@ function BaseWorld:CurrentTime()
 end
 
 ---@param name string
+---@param class string
 ---@param template string
 ---@param owner? Entity
 ---@param position Vector
 ---@param rotation Vector
 ---@param params? table
 ---@param callback? fun(err: string?, ent: Entity?)
-function BaseWorld:RequestSpawnAvatar(name, template, owner, position, rotation, params, callback)
+function BaseWorld:RequestSpawnAvatar(name, class, template, owner, position, rotation, params, callback)
     params = params or {}
 
     params["pos"] = position
     params["rot"] = rotation
 
-    __engine.loader.RequestSpawnInstance(owner, template, name, params, callback)
+    __engine.loader.RequestSpawnInstance(owner, class, template, name, params, callback)
 end
 
 return BaseWorld

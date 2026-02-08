@@ -552,7 +552,7 @@ end
 ---
 ---@param class_item_name string
 ---@param clear_inventory boolean
----@param callback fun(err?: any)
+---@param callback fun(err?: any)|nil
 function Player:ApplyClassItem(class_item_name, clear_inventory, callback)
     __engine.player.ApplyClassItem(self, class_item_name, clear_inventory, callback)
 end

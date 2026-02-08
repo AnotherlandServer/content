@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Rescue mission
+# Friends of CritYouInDaFace were captured by strange creatures. 
+# Find Laygolahz15 and RageGunzzz and help them.
+
+id: 1421
+level: 1
+world: GameEntry_P
+exp_reward: 9
+bit_reward: 2
+available_dialogue_id: 1791
+progress_dialogue_id: 1791
+prerequisites:
+  quests_finished: [ 1419 ]
+stages:
+  - - # Find Laygholaz15
+      id: 0
+      required_count: 1
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: 44b5c849-5732-4f91-990b-94e3402c7ed6
+          radius: 1000
+  - - # Defeat the shaders attacking Laygholaz15
+      id: 1
+      required_count: 2
+      hidden: true
+      beacon: 44b5c849-5732-4f91-990b-94e3402c7ed6
+      trigger:
+        kill:
+          content_guid: 37d2e3aa-7ee5-4795-9aa8-f63a2be4a15b
+  - - # Talk to Laygolhaz15
+      id: 4
+      required_count: 1
+      hidden: true
+      trigger:
+        dialogue: 1720
+  - - # Find Ragegunzz
+      id: 2
+      required_count: 1
+      trigger:
+        proximity: 
+          avatar: 
+            instance_guid: d6c29909-1199-44d4-821e-34b59769a033
+          radius: 1000
+  - - # Defeat the shaders attacking Ragegunzz
+      id: 3
+      required_count: 2
+      hidden: true
+      beacon: d6c29909-1199-44d4-821e-34b59769a033
+      trigger:
+        kill:
+          content_guid: 37d2e3aa-7ee5-4795-9aa8-f63a2be4a15b
+  - - # Talk to RageGunzzz
+      id: 5
+      required_count: 1
+      hidden: true
+      trigger:
+        dialogue: 1721

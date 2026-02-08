@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### The gathering
+# Sellars explaind why he brought you here. He wants you and the rest to stop 
+# Felix Jongleur a mogul that is causing the destruction of the Otherland network. 
+# However, if you are to reach him in time you will need to keep the system running. 
+# Sellars thinks that he can extend the time by pushing in energy, called SOMA, 
+# to the core. You should try and find it.
+
+id: 1422
+level: 1
+world: GameEntry_P
+exp_reward: 6
+bit_reward: 2
+available_dialogue_id: 1792
+progress_dialogue_id: 1792
+prerequisites:
+  quests_finished: [ 1421 ]
+stages:
+  - - # Collect fragments from Bug World simulation
+      id: 0
+      required_count: 3
+      trigger:
+        interact:
+          content_guid: 1b7d5cbe-a73b-4a1f-8539-9a9d0d248cab
+  - - # Collect fragments from Lambda Mall simulation
+      id: 1
+      required_count: 3
+      trigger:
+        interact:
+          content_guid: 620c2f9f-c63b-4cfc-9341-42917397d7e8
+  - - # Collect fragments from Mars simulation
+      id: 2
+      required_count: 3
+      trigger:
+        interact:
+          content_guid: 7149cddc-7322-4a22-ac8a-c868e9e4360d
+  - - # Collect fragments from 8Squared simulation
+      id: 3
+      required_count: 3
+      trigger:
+        interact:
+          content_guid: 4823b1fc-8adb-4550-9c51-0548244d3416

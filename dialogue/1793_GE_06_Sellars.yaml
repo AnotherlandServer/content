@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1793
+branches:
+  - selector:
+      quests_available:
+        - 1423 # Extracting shadows
+    lines:
+      - # Since we entered Otherland I was constantly blocking Felix from finding us. However, with the full power of the network he will soon be able to track us.
+        13524
+      - # The creatures you found here seem to be ignored by his gaze. If we can imitate them at least to his eyes we will be able to sneak up on him without him ever noticing.
+        line: 13525
+        choice: approve
+      - # The next part of the Otherland network that I can access is swarmed by those 'Shaders'. If you can gather their code essence I might be able to cloak all of us.
+        line: 13526
+        quest: 1423 # Extracting shadows
+  - selector:
+      quests_completed:
+        - 1423
+    lines:
+      - # That should be enough. Please, give me a moment to merge this with our signatures.
+        line: 13528
+        quest: 1423 # Extracting shadows
+  - selector:
+      quests_available:
+        - 1424 # Power on
+    lines:
+      - # I've managed to find Felix. It seems that luck is on our side this time.
+        13529
+      - # As much as I despise him I always found him to be a very intelligent person. He proves I wasn't wrong. His location is protected by the Otherland network itself. We will need to hack in.
+        line: 13530
+        choice: approve
+      - # I will open a pathway to a different part of the network, or at least of what is left of it. It's a very old simulation but you should be relatively safe there.
+        13531
+      - # Once you are there you will need to search for something called a power node. Those are the sources of Felix's protection. If we can deactivate them, it will allow us to enter his hideout.
+        line: 13532
+        quest: 1424 # Power on

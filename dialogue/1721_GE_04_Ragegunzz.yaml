@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1721
+branches:
+  - lines:
+      - # I could have handled them myself... thanks though.
+        line: 8550
+        choice: approve

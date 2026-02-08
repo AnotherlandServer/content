@@ -37,6 +37,8 @@ function GameEntry_P:PreLoadPlayerInventory(player)
             gender = "Male"
         end
 
+        player:Set("firstTimeSpawn", false)
+
         player:ApplyClassItem("Class_Preset_Tutorial_End_" .. class .. "_" .. gender, true, function ()
             Log.Debug("Preset applied")
             player:BeginLoadInventory()

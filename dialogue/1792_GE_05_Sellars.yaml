@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1792 
+branches:
+  - selector:
+      quests_completed:
+        - 1421 # Rescue mission
+    lines:
+      - # It is good to see the group together. I am sure they will be more careful now.
+        line: 13516
+        quest: 1421
+  - selector:
+      quests_available:
+        - 1422
+    lines:
+      - # The Otherland network seems to be collapsing. If we remain here too long, we will be lost with it.
+        line: 13517
+      - # The one responsible for this is named Felix Jongleur. He is a multibillionaire from the real world that wanted to use this system for his own notorious plans.
+        line: 13518
+      - # In his lust for immortality he doomed the network and brought the destruction you see here. I did what I could to stop him but without the help of others we will never succeed.
+        line: 13519
+      - # This is the task at hand I was talking about. We will need to find him in this world and stop whatever it is he is doing before it is too late.
+        line: 13520
+        choice: approve
+      - # As you can see the network is trying to preserve as much as it can. The simulations we are in were once enormous worlds. Now, they are only small pieces glued together waiting to be lost forever, with us in it. But, I have an idea how we can extend our time.
+        line: 13521
+      - # The network is fueled by energy called SOMA. If we can find some of it here I will push it into the Otherland and power it up again. It should give us a couple more minutes.
+        line: 13522
+        quest: 1422 # The gathering
+  - selector:
+      quests_completed:
+        - 1422
+    lines:
+      - # The simulations are in a bad shape. I remember vast worlds. What you see now is just an imitation of what they were. Enough digressing, the SOMA you've gathered should give us more time.
+        line: 13523
+        quest: 1422 # The gathering

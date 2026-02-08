@@ -241,6 +241,10 @@ properties:
             description: >
               GUID of a beacon associated with this condition.
             $ref: "#/$defs/uuid"
+          hidden:
+            description: >
+              Whether this condition is hidden in the quest description.
+            type: boolean
           trigger:
             oneOf:
               - $ref: "#/$defs/interactTrigger"

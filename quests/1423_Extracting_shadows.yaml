@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Extracting shadows
+# Since you entered the Otherland network Felix was constantly trying to 
+# pinpoint your location. Sellars has a plan in hiding you and the rest 
+# of the simuloids. If you can gather the essence of the creatures he 
+# called 'shaders' he will be able to hide all of you.
+
+id: 1423
+level: 1
+world: GameEntry_P
+exp_reward: 12
+bit_reward: 4
+available_dialogue_id: 1793
+progress_dialogue_id: 1793
+prerequisites:
+  quests_finished: [ 1421 ]
+stages:
+  - - # Gather shader essence
+      id: 0
+      required_count: 10
+      trigger:
+        item_guid: 1748fcb2-76ac-4d7f-be92-d2ca74551e5c
