@@ -102,4 +102,12 @@ function NonClientBase:CancelAnimationForPlayer(player)
     self:Set(player, "action0Duration", 0)
 end
 
+---@param player Player
+---@param party any
+---@param item any
+---@param count any
+function NonClientBase:DropItem(player, party, item, count)
+    __engine.inventory.DropItem(self, player, party, item, count)
+end
+
 return NonClientBase

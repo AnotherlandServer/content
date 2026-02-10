@@ -253,7 +253,7 @@ properties:
               - $ref: "#/$defs/sojournTrigger"
               - $ref: "#/$defs/dialogueTrigger"
               - $ref: "#/$defs/timeoutTrigger"
-              - $ref: "#/$defs/itemTrigger"
+              - $ref: "#/$defs/lootTrigger"
 $defs:
   uuid:
     type: string
@@ -354,15 +354,15 @@ $defs:
         description: >
           Timeout in seconds.
         type: number
-  itemTrigger:
+  lootTrigger:
     type: object
     additionalProperties: false
-    required: [item_guid]
+    required: [loot]
     properties:
-      item_guid:
+      loot:
         description: >
-          GUID of an item the target drops.
-        $ref: "#/$defs/uuid"
+          Name of an item the target drops.
+        type: string
 
 
 

@@ -20,4 +20,4 @@ stages:
       id: 0
       required_count: 10
       trigger:
-        item_guid: 1748fcb2-76ac-4d7f-be92-d2ca74551e5c
+        loot: QuestItem_ShaderEssences

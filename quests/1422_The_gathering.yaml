@@ -20,24 +20,24 @@ stages:
   - - # Collect fragments from Bug World simulation
       id: 0
       required_count: 3
+      beacon: b72915fc-6c61-49de-8e04-9e62c1be882c
       trigger:
-        interact:
-          content_guid: 1b7d5cbe-a73b-4a1f-8539-9a9d0d248cab
+        loot: QuestItem_EnergyPoo01
   - - # Collect fragments from Lambda Mall simulation
       id: 1
       required_count: 3
+      beacon: 4e96455a-5389-425b-bf06-8ab34e3eae9b
       trigger:
-        interact:
-          content_guid: 620c2f9f-c63b-4cfc-9341-42917397d7e8
+        loot: QuestItem_EnergyPoo02
   - - # Collect fragments from Mars simulation
       id: 2
       required_count: 3
+      beacon: 37ed9fde-9a15-4a2b-81a7-1340151bcd79
       trigger:
-        interact:
-          content_guid: 7149cddc-7322-4a22-ac8a-c868e9e4360d
+        loot: QuestItem_EnergyPoo03
   - - # Collect fragments from 8Squared simulation
       id: 3
       required_count: 3
+      beacon: 8c4f5586-059f-4f85-a667-813d0cac9d84
       trigger:
-        interact:
-          content_guid: 4823b1fc-8adb-4550-9c51-0548244d3416
+        loot: QuestItem_EnergyPoo04
