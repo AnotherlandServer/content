@@ -13,7 +13,7 @@ local Behavior = require("engine.behavior")
 local Dump = require("core.dump")
 local EdnaAbility = require("global.base.edna_ability")
 local AbilityEvent = require("engine.ability_event")
-
+local LootTable = require("engine.loot_table")
 
 
 ---@class NpcOtherland: NonClientBase
@@ -462,16 +462,29 @@ Npc:On("OnDamage",
     ---@param source Player|NpcOtherland
     function(self, damage, source)
         --Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage .. " damage from " .. source.name)
-
-        if not self.threatList[source.avatar_id] then
-            self.threatList[source.avatar_id] = {
-                entity = source,
-                distance = 0,
-                damage = damage,
-                bonus = 0,
-            }
+        if self:Get("alive") then
+            if not self.threatList[source.avatar_id] then
+                self.threatList[source.avatar_id] = {
+                    entity = source,
+                    distance = 0,
+                    damage = damage,
+                    bonus = 0,
+                }
+            else
+                self.threatList[source.avatar_id].damage = self.threatList[source.avatar_id].damage + damage
+            end
         else
-            self.threatList[source.avatar_id].damage = self.threatList[source.avatar_id].damage + damage
+            if source and source.class == "player" then 
+                ---@cast source Player
+                
+                local loot = LootTable:New(self:Get("lootTable")):GetRandomLoot()
+
+                for _, entry in ipairs(loot) do
+                    self:DropItem(source, nil, entry.item, entry.count)
+                end
+            end
+
+            self.threatList = {}
         end
     end)
 

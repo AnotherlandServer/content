@@ -13,11 +13,13 @@ exp_reward: 12
 bit_reward: 4
 available_dialogue_id: 1793
 progress_dialogue_id: 1793
+completion_dialogue_id: 1793
 prerequisites:
-  quests_finished: [ 1421 ]
+  quests_finished: [ 1422 ]
 stages:
   - - # Gather shader essence
       id: 0
       required_count: 10
+      beacon: 3f7ed2b0-0c9a-4274-b660-d05baabddbba
       trigger:
-        loot: QuestItem_ShaderEssences
+        loot: Quest_LM_L_3_Essence
