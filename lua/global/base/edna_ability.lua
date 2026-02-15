@@ -30,6 +30,8 @@ function EdnaAbility:Use(source, invocation, request)
         effector:SetAbility(self)
         effector:SetItem(request.item)
         effector:SetTarget(request.target)
+        
+        effector:SetTargetRotation(request.target_rotation)
 
         local effects = effector:Apply()
         invocation:AddEffects(effects)
@@ -48,6 +50,7 @@ function EdnaAbility:Channel(source, invocation, request)
         local effector = Effector:New(source, effectorChannelingSettings)
         effector:SetAbility(self)
         effector:SetItem(request.item)
+        effector:SetTargetRotation(request.target_rotation)
         effector:SetTarget(request.target)
 
         local effects = effector:Apply()

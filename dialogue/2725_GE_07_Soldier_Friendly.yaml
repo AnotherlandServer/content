@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 2725
+branches:
+  - lines:
+      - # His name was Dread. At least that is what he told us. He came here from nowhere holding the soul of the world itself in his hands. What can a man do against such power? What?!
+        13533
+      - # Those that fought become a victim of the Otherland. We didn't stand a chance. He was now the one to rule all worlds, all realities.
+        13534
+
+      

@@ -210,10 +210,8 @@ function TargetFactory:FindTargets_pie()
     local rotation 
     
     if self.rotationOverride then
-        --Log.Debug("TargetFactory:FindTargets_pie - Using target rotation")
         rotation = self.rotationOverride
     else
-        --Log.Debug("TargetFactory:FindTargets_pie - Using source rotation")
         rotation = self.source:GetRotation()
     end
 
@@ -244,14 +242,24 @@ function TargetFactory:FindTargets_pie()
 
     for _,v in ipairs(targets) do
         local direction = (v:GetPosition() - self.source:GetPosition()):WithY(0)
+        local distance = direction:Length()
 
-        if direction:Length() >= radius_min and direction:Length() <= radius_max then
-            local angle_between = forward:AngleBetween(direction:WithY(0):Normalize())
-
-            --Log.Debug("TargetFactory:FindTargets_pie - Angle: " .. angle_between .. " / " .. angle / 2)
-
-            if angle_between < angle / 2 then
+        if distance >= radius_min and distance <= radius_max then
+            -- If this is the selected target, always include it (no angle check needed)
+            -- The pie angle check is for catching additional enemies in your swing
+            if v == self.selectedTarget and distance >= radius_min and distance <= radius_max then
                 table.insert(result, v)
+            -- Skip angle check if target is at the same position (avoid NaN from normalizing zero vector)
+            elseif distance < 0.001 then
+                table.insert(result, v)
+            else
+                local direction_normalized = direction:Normalize()
+                local forward_flat = forward:WithY(0):Normalize()
+                local angle_between = forward_flat:AngleBetween(direction_normalized)
+
+                if angle_between <= angle / 2 then
+                    table.insert(result, v)
+                end
             end
         end
     end

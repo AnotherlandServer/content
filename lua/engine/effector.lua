@@ -326,6 +326,7 @@ local Player = require("global.base.player")
 ---@field source Player|NpcOtherland
 ---@field ability? EdnaAbility
 ---@field buff? OaBuff
+---@field targetRotation? Quaternion
 local Effector = {}
 
 local Effectors = {
@@ -547,6 +548,7 @@ function Effector:CreateTargetFactory(def)
 
     local targetfactory = TargetFactory.New(self.source, factoryDef)
     targetfactory:SetSelectedTarget(self.target)
+    targetfactory:OverrideRotation(self.targetRotation)
 
     return targetfactory
 end
@@ -569,6 +571,11 @@ end
 ---@param buff OaBuff
 function Effector:SetBuff(buff)
     self.buff = buff
+end
+
+---@param rotation? Quaternion
+function Effector:SetTargetRotation(rotation)
+    self.targetRotation = rotation
 end
 
 ---@return Effect[]

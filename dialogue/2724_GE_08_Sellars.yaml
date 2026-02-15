@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 2724
+branches:
+  - selector:
+      quests_completed:
+        - 1424
+    lines:
+      - # Jonas... A man that was in the wrong place at the right time. I wouldn't expect you to know the story but if we get out of here I will gladly tell it to you.
+        13535
+      - # What do you mean he spoke to you? That is... unexpected. What did he say?
+        13536
+      - # I don't think it was Jonas himself. I think a much stronger being was yelling for help. The serial killer Dread was the one that started the abuse of the Otherland network. Through pain and punishment, he managed to control the system.
+        13537
+      - # He was stopped, in a way. However, we will forever pay for what he did and how Felix rose to power after that.
+        line: 13538
+        quest: 1424 # Power on
+  - selector:
+      quests_available:
+        - 1425 # Falling shadows
+    lines:
+      - # The door to Felix is open. I've already managed to transport the rest of the simuloids to him. I am sure they will need your help in stopping Felix.
+        13539
+      - # Take the portal. It will lead you directly to Felix. Good luck. I will try to help as much as I am able through the code of the simulation. I hope we will meet again because there is a lot more for me to explain.
+        line: 13540
+        quest: 1425 # Falling shadows

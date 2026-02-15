@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Power on
+# Sellars managed to find Felix. He is protected by a couple of firewalls 
+# powered by the Otherland network itself. Sellars wants you to enter one 
+# of the oldest simulations of the Otherland network and find power nodes 
+# here. When they are disabled you will be able to enter Felix's hideout.
+
+id: 1424
+level: 1
+world: GameEntry_P
+exp_reward: 12
+bit_reward: 4
+available_dialogue_id: 1793
+progress_dialogue_id: 1793
+completion_dialogue_id: 2724
+prerequisites:
+  quests_finished: [ 1423 ]
+stages:
+  - - # Travel to the next simulation using the portal
+      id: 3
+      required_count: 1
+      beacon: bcafcbe9-8c04-4202-98af-f6baa25b5b8d
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: 8ca9d525-c1a1-4ad4-8904-f09d66e063b6
+          radius: 200
+  - - # Deactivate the first Power Node
+      id: 0
+      required_count: 1
+      trigger:
+        interact:
+          instance_guid: 6e2c5696-945c-407b-8d7a-66ba61aaf701
+  - - # Deactivate the second Power Node
+      id: 1
+      required_count: 1
+      trigger:
+        interact:
+          instance_guid: 1fe07a86-21c7-446a-bcc5-482510b82e9e
+  - - # Deactivate the third Power Node
+      id: 2
+      required_count: 1
+      trigger:
+        interact:
+          instance_guid: c5efaa04-a2f9-40db-88aa-a1b46e0e1621
+  - - # Talk to the wounded soldier
+      id: 4
+      required_count: 1
+      hidden: true
+      trigger:
+        dialogue: 2725
