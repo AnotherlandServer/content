@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Going home?
+# The exit is open and free. You should use the portal to leave 
+# the Otherland network.
+
+id: 2741
+level: 1
+world: GameEntry_P
+exp_reward: 5
+bit_reward: 1
+available_dialogue_id: 2723
+progress_dialogue_id: 2723
+prerequisites:
+  quests_finished: [ 2740 ]
+stages:
+  - - # Use the portal to leave the Otherland network
+      id: 0
+      required_count: 1
+      trigger:
+        proximity:
+          avatar:
+            instance_guid: bcce29cc-c4f3-451f-bf8a-96687c9d80be
+          radius: 1000
+          

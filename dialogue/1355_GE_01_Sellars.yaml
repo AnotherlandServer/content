@@ -21,6 +21,7 @@ branches:
   - selector:
       quests_available:
         - 1352 # Travel
+    sequential_index: true
     lines:
       - # We must get you ready for the task at hand.  Prepare yourself for a far less serene location.
         6044

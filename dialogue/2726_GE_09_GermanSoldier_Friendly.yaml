@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 2726
+branches:
+  - lines:
+      - # The puppet falls. The world crumbles in destruction. You fix nothing, the children of the sinners are still alive. The Neo Grail plots behind your sight to bring the worlds down.
+        line: 13544

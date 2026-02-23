@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 1794
+branches:
+  - lines:
+      - # You are here just in time! Felix lured us into a trap! If we don't beat him now we are not getting out of here alive! The four obelisks are keeping him in Otherland. We will keep him busy! Move! We don't have much time!
+        line: 13541
+        choice: approve

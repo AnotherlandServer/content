@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Cutting history
+# Sellars can teleport you and the rest of the simulation fast but it's risky. 
+# He however is terrified that the Neo Grail organization is already working. 
+# He asked you to push forward in order to learn what has happened.
+
+id: 2739
+level: 1
+world: GameEntry_P
+exp_reward: 17
+bit_reward: 7
+available_dialogue_id: 2724
+progress_dialogue_id: 2724
+completion_dialogue_id: 2724
+prerequisites:
+  quests_finished: [ 2738 ]
+stages:
+  - - # Defeat the Neo Grail forces
+      id: 0
+      required_count: 14
+      beacon: 62bd4df5-c5dc-4276-ac11-4139205f871d
+      trigger:
+        kill:
+          quest_tag: 64
+          

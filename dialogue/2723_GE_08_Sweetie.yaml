@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=../otherland.dialogue.schema.yaml
+id: 2723
+branches:
+  - selector:
+      quests_completed:
+        - 1425 # Falling shadows
+    lines:
+      - # He is powering down! We are winning!
+        line: 13542
+        quest: 1425 # Falling shadows
+  - selector:
+      quests_available:
+        - 2738 # One last thing
+    lines:
+      - # We will take care of him. You should go find Sellars and make sure he drags us all out of here before the network dies on us.
+        line: 13543
+        quest: 2738 # One last thing
+  - selector:
+      quests_completed:
+        - 2740 # Exit
+    lines:
+      - # That enormous thing was blocking our exit. It's a good thing you showed up when you did.
+        line: 13556
+        quest: 2740 # Exit
+  - selector:
+      quests_available:
+        - 2741 # Going home?
+    lines:
+      - # Let's move before this entire thing collapses on us. I hope to meet you on the other side!
+        line: 13557
+        quest: 2741 # Going home?

@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Power on
+# Sellars managed to find Felix. He is protected by a couple of firewalls 
+# powered by the Otherland network itself. Sellars wants you to enter one 
+# of the oldest simulations of the Otherland network and find power nodes 
+# here. When they are disabled you will be able to enter Felix's hideout.
+
+id: 1425
+level: 1
+world: GameEntry_P
+exp_reward: 24
+bit_reward: 5
+available_dialogue_id: 2724
+progress_dialogue_id: 2724
+completion_dialogue_id: 2723
+prerequisites:
+  quests_finished: [ 1424 ]
+stages:
+  - - # Meet up with Sweetie on the other side of the portal
+      id: 2
+      required_count: 1
+      beacon: 66f00a62-0284-4c69-a9d6-986620e3325d
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: 79fec108-5665-44e5-a750-a9672390fbe2
+          radius: 200
+  - - # Talk to Sweetie
+      id: 1
+      required_count: 1
+      trigger:
+        dialogue: 1794
+  - - # Destroy obelisks
+      id: 3
+      required_count: 4
+      hidden: true
+      trigger:
+        kill:
+          content_guid: b4ded270-fdef-497a-b47d-f0925690ef1b

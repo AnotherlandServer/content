@@ -23,3 +23,49 @@ branches:
       - # Take the portal. It will lead you directly to Felix. Good luck. I will try to help as much as I am able through the code of the simulation. I hope we will meet again because there is a lot more for me to explain.
         line: 13540
         quest: 1425 # Falling shadows
+  - selector:
+      quests_completed:
+        - 2738 # One last thing
+    lines:
+      - # Felix is gone, but before you leave, there is one more thing we must do.
+        13545
+      - # You met Jonas again? What did he say?
+        13546
+      - # The Neo Grail is already active. I feared it would come to this. Listen to me. If we get out of this, we will need to meet up with the group that calls themselves 'admins'. They helped me once to get rid of the Grail organization.
+        line: 13547
+        choice: approve
+      - # They will need to know what is happening. We will need to work together again to deal with the new threat.
+        line: 13548
+        quest: 2738 # One last thing
+  - selector:
+      quests_available:
+        - 2739 # Cutting history
+    lines:
+      - # It seems that the invasion of the Neo Grail has already started in the Otherland network.
+        13549
+      - # We must push forward. Fight your way through if you must. I... We need to know what has happened before we leave this place.
+        line: 13550
+        quest: 2739 # Cutting history
+  - selector:
+      quests_completed:
+        - 2739 # Cutting history
+    lines:
+      - # This is it. The last part of the puzzle unfolds in front of us. Orlando...
+        line: 13551
+        quest: 2739 # Cutting history
+  - selector:
+      quests_available:
+        - 2740 # Exit
+    lines:
+      - # He fought them. The fool fought them alone. I don't think he know what he was facing.
+        13552
+      - # Once you leave this place you will need to contact the admins and tell them that Orlando has been captured. That they will kill him if they don't act fast. Remember, the admins are the only real friends we both have inside the Otherland network.
+        line: 13553
+        choice: approve
+      - # Now, continue onward. I've teleported Sweetie and the rest to a portal nearby. Right now, it is not fully powered. You will need to feed it with energy. I think the shaders near it will suffice.
+        line: 13554
+        choice: approve
+      - # When powered, the portal will be the best way to leave the network. I will remain here a little bit longer and make sure you are not followed by whatever remained in this destroyed world.
+        line: 13555
+        quest: 2740 # Exit
+      

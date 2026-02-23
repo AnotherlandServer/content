@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### One last thing
+# Sweetie and the rest will deal with Felix. You should find 
+# Sellars and make sure you and the rest are ported out of the 
+# network before it collapses.
+
+id: 2738
+level: 1
+world: GameEntry_P
+exp_reward: 8
+bit_reward: 4
+available_dialogue_id: 2723
+progress_dialogue_id: 2723
+completion_dialogue_id: 2724
+prerequisites:
+  quests_finished: [ 1425 ]
+stages:
+  - - # Find Sellars
+      id: 0
+      required_count: 1
+      beacon: 1eb11e81-c183-494e-ba58-e70d13605708
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: 3511bb35-023e-491d-93a3-428672624e56
+          radius: 200
+  - - # Talk to the wounded soldier
+      id: 2
+      required_count: 1
+      hidden: true
+      trigger:
+        dialogue: 2726
+  - - # Find Sellars
+      id: 1
+      required_count: 1
+      hidden: true
+      beacon: 3b787159-46b3-4659-81d5-1dd93b274210
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: ea915e62-90de-40f9-98dc-e1f42d2f58e5
+          radius: 200

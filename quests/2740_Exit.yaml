@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Exit
+# Sellars told you about Orlando and how he is crucial in defeating 
+# the Neo Grail. You should head forward and meet up with Sweetie. 
+# The exit of the network is really close.
+
+id: 2740
+level: 1
+world: GameEntry_P
+exp_reward: 30
+bit_reward: 8
+available_dialogue_id: 2724
+progress_dialogue_id: 2724
+completion_dialogue_id: 2723
+prerequisites:
+  quests_finished: [ 2739 ]
+stages:
+  - - # Meet up with Sweetie Cheng
+      id: 0
+      required_count: 1
+      trigger:
+        proximity:
+          avatar: 
+            instance_guid: d5c6d642-3c2e-40d8-bcdb-bf7a1b1b9807
+          radius: 200
+  - - # Power up the portal by killing enemies near it
+      id: 1
+      required_count: 8
+      hidden: true
+      trigger:
+        kill:
+          quest_tag: 248

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../otherland.quest.schema.yaml
+
+### Falling from the skies
+# Right after escaping Limbo you got attacked by a group
+# of gang members in Bad Sector. You need to survive!
+
+id: 1625
+level: 1
+world: BadSector_P
+exp_reward: 10
+bit_reward: 6
+stages:
+ - - # Survive
+     id: 0
+     required_count: 1
+     trigger:
+       timeout: 30
