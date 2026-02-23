@@ -168,6 +168,9 @@ function TargetFactory:ShouldEffect(target)
         (self.def.settings.affectFriends and relationship >= Relationship.Affiliation.Friendly)
     then
         return true
+    elseif self.def.settings.affectEnemies and target:Get("tags") and string.find(target:Get("tags"), "HostileMob") then
+        -- Fallback to tag-based relationship if affiliation is not set
+        return true
     end
 
     return false
@@ -247,7 +250,7 @@ function TargetFactory:FindTargets_pie()
         if distance >= radius_min and distance <= radius_max then
             -- If this is the selected target, always include it (no angle check needed)
             -- The pie angle check is for catching additional enemies in your swing
-            if v == self.selectedTarget and distance >= radius_min and distance <= radius_max then
+            if v == self.selectedTarget then
                 table.insert(result, v)
             -- Skip angle check if target is at the same position (avoid NaN from normalizing zero vector)
             elseif distance < 0.001 then
