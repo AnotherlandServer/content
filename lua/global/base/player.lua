@@ -676,12 +676,6 @@ function Player:CastAbility(ability, request)
 
             local target = self:GetTarget()
 
-            if target == nil then
-                Log.Debug("Player:CastAbility - No target found")
-            else
-                Log.Debug("Player:CastAbility - Target found " .. target.name)
-            end
-
             if target == nil or (target.class ~= "player" and target.class ~= "npcOtherland") then
                 target = nil
             end
@@ -873,13 +867,25 @@ function Player:ConfirmTravel()
 end
 
 ---@param zone string
-function Player:TravelToZone(zone)
-    __engine.player.TravelToZone(self, zone)
+---@param movie string|nil
+function Player:TravelToZone(zone, movie)
+    __engine.player.TravelToZone(self, zone, movie)
 end
 
 ---@param portal_id string
 function Player:TravelToPortal(portal_id)
     __engine.player.TravelToPortal(self, portal_id)
+end
+
+---@param cinematic string
+---@param level string|nil
+function Player:RunCinematic(cinematic, level)
+    __engine.player.RunCinematic(self, cinematic, level)
+end
+
+---@param event string
+function Player:TriggerRemoteEvent(event)
+    __engine.player.TriggerRemoteEvent(self, event)
 end
 
 ---@param other Player|NpcOtherland

@@ -36,6 +36,11 @@ function QuestLog:MarkQuestAvailable(questId)
 end
 
 ---@param questId integer
+function QuestLog:AcceptQuest(questId)
+    __engine.questlog.AcceptQuest(self.player, questId)
+end
+
+---@param questId integer
 function QuestLog:FailQuest(questId)
     __engine.questlog.FailQuest(self.player, questId)
 end
@@ -44,6 +49,12 @@ end
 ---@return QuestState
 function QuestLog:GetQuestState(questId)
     return __engine.questlog.GetQuestState(self.player, questId)
+end
+
+---@param questId integer
+---@return {id: integer, condition: integer, required_count: integer, current_count: integer}
+function QuestLog:GetActiveQuestProgress(questId)
+    return __engine.questlog.GetActiveCondition(questId, self.player)
 end
 
 return QuestLog
