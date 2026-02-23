@@ -278,7 +278,7 @@ $defs:
             $ref: "#/$defs/uuid"
       - type: object
         additionalProperties: false
-        required: [quest_tags]
+        required: [quest_tag]
         properties:
           quest_tag:
             description: >
