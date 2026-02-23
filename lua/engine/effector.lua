@@ -344,11 +344,17 @@ local Effectors = {
                 targets = { table.unpack(targets, 1, def.aoeTargetCap) }
             end
         end
-    
+
         for _, target in ipairs(targets) do
             ---@cast target Player|NpcOtherland
-
-            if target:Get("alive") == false or target:Get("isUnAttackable") == true then
+            
+            local is_unattackable = target:Get("isUnAttackable")
+            if effector.source.class == "player" then
+                local player = effector.source --[[@as Player]]
+                is_unattackable = target:Get(player, "isUnAttackable")
+            end
+            
+            if target:Get("alive") == false or is_unattackable then
                 goto continue
             end
     
