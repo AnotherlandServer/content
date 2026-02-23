@@ -21,6 +21,12 @@ $defs:
     type: object
     additionalProperties: false
     properties:
+      sequential_index:
+        description: >
+          If true, the internal line index continues from the previous branch
+          instead of resetting to 0.
+        type: boolean
+        default: false
       selector:
         description: >
           Selector for this dialogue branch.
