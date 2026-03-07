@@ -95,6 +95,7 @@ Player.AddBehavior("travel", function (self, _, dest)
     local zone_name = string.match(dest, "dest=(.+)")
     
     if zone_name then
+        self:RunCinematic("PortalDepartDefault")
         self:TravelToZone(zone_name)
     else
         Log.Warn("Invalid destination format: " .. dest)
@@ -1065,6 +1066,12 @@ function Player:RequestInteraction(type, target)
     if type == "interact" then
         target:RequestInteraction(self, type)
     end
+end
+
+---@param type "Normal"|"Combat"|"Console"|"Clan"|"Party"|"Xp"|"Loot"|"Quest"|"PopUp"|"IllegalZone"
+---@param message string
+function Player:SendMessage(type, message)
+    __engine.player.SendMessage(self, message, type)
 end
 
 return Player
