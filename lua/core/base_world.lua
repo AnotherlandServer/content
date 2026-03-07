@@ -138,4 +138,10 @@ function BaseWorld:RequestSpawnAvatar(name, class, template, owner, position, ro
     __engine.loader.RequestSpawnInstance(owner, class, template, name, params, callback)
 end
 
+---@param position Vector
+---@return number?
+function BaseWorld:GetFloorHeight(position)
+    return __engine.navigation.GetFloorHeight(position)
+end
+
 return BaseWorld

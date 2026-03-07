@@ -91,6 +91,11 @@ end
 ---@param dt number
 ---@return Behavior.Result, number
 function UpdateThreatList(npc, dt)
+    -- We don't attack ourselves if we are unattackable
+    if npc:Get("isUnAttackable") then
+        return Behavior.Result.Success, 0
+    end
+
     local interests = npc:GetInterests()
     local visionRange = npc:Get("visionRange")
 
@@ -188,6 +193,11 @@ function GetInTargetRange(npc, dt)
     local targetPos = target:GetPosition()
     local npcPos = npc:GetPosition()
     local updatePath = false
+    local floorHeight = GetWorld():GetFloorHeight(targetPos)
+
+    if floorHeight then
+        targetPos.y = floorHeight
+    end
 
     if npc._targetPos == nil or npc._targetPos ~= targetPos then 
         npc._targetPos = target:GetPosition()
@@ -221,9 +231,7 @@ function GetInTargetRange(npc, dt)
 
     if updatePath then
         -- Move to target position
-        npc:MoveToPosition(targetPos, npc:Get("runSpeed"), function(state, pos)
-            npc._pathingState = state
-        end)
+        npc:MoveToPosition(targetPos, npc:Get("runSpeed"), npc.pathing_callback)
     end
 
     return Behavior.Result.Running, dt
@@ -304,9 +312,9 @@ function ReturnFromCombat(npc, dt)
 
     if moveDest.x ~= 0.0 and moveDest.y ~= 0.0 and moveDest.z ~= 0.0 then
         if npc:GetPosition():Distance(moveDest) > 0.1 then
-            npc:MoveToPosition(moveDest, npc:Get("moveSpeed"), function(state, pos)
-                npc._pathingState = state
-            end)
+            Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
+
+            npc:MoveToPosition(moveDest, npc:Get("moveSpeed"), npc.pathing_callback)
 
             return Behavior.Result.Running, dt
         else
@@ -314,16 +322,11 @@ function ReturnFromCombat(npc, dt)
         end
     else
         if npc:GetPosition():Distance(npc:Get("spawnPosition")) > 0.1 then
+            Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "]")
+
         
             -- Return to spawn position
-            npc:MoveToPosition(npc:Get("spawnPosition"), npc:Get("walkSpeed"), function(state, pos)
-                npc._pathingState = state
-
-                if state == "FINISHED" then
-                    npc:Set("orientation", npc:Get("spawnRotation"))
-                    npc:Set("rot", npc:Get("spawnRotation"))
-                end
-            end)
+            npc:MoveToPosition(npc:Get("spawnPosition"), npc:Get("walkSpeed"), npc.pathing_callback)
 
             return Behavior.Result.Running, dt
         else
@@ -394,6 +397,10 @@ function Npc:Init()
     NonClientBase.Init(self)
 
     self:InstallBehavior(BehaviorTree)
+
+    self.pathing_callback = function(state, pos)
+        self._pathingState = state
+    end
 end
 
 Npc:On("Spawned",
@@ -709,6 +716,30 @@ end
 
 function Npc:GetPeneBonus()
     return ArmorPeneTable[self:Get("lvl")] or 0
+end
+
+---@param node NonClientBase|string
+function Npc:WalkToNode(node)
+    local targetNode = nil --- @type NonClientBase?
+
+    if type(node) == "string" then
+        targetNode = GetWorld():GetEntityByName(node) --[[@as NonClientBase?]]
+    else
+        targetNode = node
+    end
+
+    if targetNode then
+        Log.Debug("Npc:WalkToNode - Walking to node " .. targetNode.name .. " at position [" .. targetNode:GetPosition().x .. ", " .. targetNode:GetPosition().y .. ", " .. targetNode:GetPosition().z .. "]")
+
+        local targetPos = targetNode:GetPosition()
+        local floorHeight = GetWorld():GetFloorHeight(targetPos)
+        if floorHeight then
+            targetPos.y = floorHeight
+        end
+
+        self:Set("moveDest", targetPos)
+        self:Set("moveSpeed", self:Get("walkSpeed"))
+    end
 end
 
 return Npc
