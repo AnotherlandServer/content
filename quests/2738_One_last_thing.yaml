@@ -10,6 +10,9 @@ level: 1
 world: GameEntry_P
 exp_reward: 8
 bit_reward: 4
+item_reward:
+  name: Consumable_BitsHealthPotionT1
+  count: 3
 available_dialogue_id: 2723
 progress_dialogue_id: 2723
 completion_dialogue_id: 2724

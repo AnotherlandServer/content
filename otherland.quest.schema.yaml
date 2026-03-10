@@ -30,6 +30,44 @@ properties:
   bit_reward:
     description: >
       Bits awarded by completing the quest.
+      type: integer
+  item_reward:
+    oneOf:
+      - description: >
+          Item Name of the reward for completing the quest per combat style.
+        type: object
+        additionalProperties: false
+        properties: 
+          assassin:
+            description: >
+              Item Name of the reward for Assassin combat style.
+            $ref: "#/$defs/classItemRewardRef"
+          energizer:
+            description: >
+              Item Name of the reward for Energizer combat style.
+            $ref: "#/$defs/classItemRewardRef"
+          marksman:
+            description: >
+              Item Name of the reward for Marksman combat style.
+            $ref: "#/$defs/classItemRewardRef"
+          warrior:
+            description: >
+              Item Name of the reward for Warrior combat style.
+            $ref: "#/$defs/classItemRewardRef"
+      - description: >
+          Item Name and count of the reward for completing the quest.
+        type: object
+        additionalProperties: false
+        required: [name, count]
+        properties:
+          name:
+            description: >
+              Item Name of the reward for completing the quest.
+            type: string
+          count:
+            description: >
+              Count of the rewarded item.
+            type: integer
   available_dialogue_id:
     description: >
       ID of the dialogue displayed to accept the quest.
@@ -363,7 +401,21 @@ $defs:
         description: >
           Name of an item the target drops.
         type: string
-
+  classItemRewardRef:
+    oneOf:
+      - type: string
+      - type: object
+        additionalProperties: false
+        required: [male, female]
+        properties:
+          male:
+            description: >
+              Item Name of the reward
+            type: string
+          female:
+            description: >
+              Item Name of the reward
+            type: string
 
 
 

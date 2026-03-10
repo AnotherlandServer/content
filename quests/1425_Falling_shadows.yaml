@@ -11,6 +11,11 @@ level: 1
 world: GameEntry_P
 exp_reward: 24
 bit_reward: 5
+item_reward:
+  assassin: Assassin_lvl2_Sword
+  energizer: Energizer_lvl2_Launcher
+  marksman: Marksman_lvl2_Shotgun
+  warrior: Warrior_lvl2_2HClub
 available_dialogue_id: 2724
 progress_dialogue_id: 2724
 completion_dialogue_id: 2723

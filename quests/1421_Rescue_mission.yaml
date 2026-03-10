@@ -9,6 +9,11 @@ level: 1
 world: GameEntry_P
 exp_reward: 9
 bit_reward: 2
+item_reward:
+  assassin: Assassin_lvl1_Pole
+  energizer: Energizer_lvl1_BeamGun
+  marksman: Marksman_lvl1_AssaultRifle
+  warrior: Warrior_lvl1_2HPoleArm
 available_dialogue_id: 1791
 progress_dialogue_id: 1791
 completion_dialogue_id: 1792
