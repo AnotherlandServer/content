@@ -312,7 +312,7 @@ function ReturnFromCombat(npc, dt)
 
     if moveDest.x ~= 0.0 and moveDest.y ~= 0.0 and moveDest.z ~= 0.0 then
         if npc:GetPosition():Distance(moveDest) > 0.1 then
-            Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
+            -- Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
 
             npc:MoveToPosition(moveDest, npc:Get("moveSpeed"), npc.pathing_callback)
 
@@ -322,7 +322,7 @@ function ReturnFromCombat(npc, dt)
         end
     else
         if npc:GetPosition():Distance(npc:Get("spawnPosition")) > 0.1 then
-            Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "]")
+            -- Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "]")
 
         
             -- Return to spawn position
