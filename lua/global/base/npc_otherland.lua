@@ -78,6 +78,8 @@ function ChooseAbility(npc, dt)
         elseif #npc.abilities > 0 then
             npc.choosenAbility = npc.abilities[1]
             npc.choosenWeapon = nil
+
+            return Behavior.Result.Success, 0
         end
 
         Log.Err("Npc:ChooseAbility - No ability found for " .. npc.name)
@@ -91,27 +93,27 @@ end
 ---@param dt number
 ---@return Behavior.Result, number
 function UpdateThreatList(npc, dt)
-    -- We don't attack ourselves if we are unattackable
-    if npc:Get("isUnAttackable") then
-        return Behavior.Result.Success, 0
-    end
+    local evadeRange = npc:Get("evadeRange")
 
-    local interests = npc:GetInterests()
-    local visionRange = npc:Get("visionRange")
+    -- If npc searches for enemies, we add visible hostile entities to the threat list
+    if npc:Get("willSearchForEnemy") then
+        local interests = npc:GetInterests()
+        local visionRange = npc:Get("visionRange")
 
-    -- Add nearby interests to the threat list
-    for _, interest in ipairs(interests) do
-         ---@cast interest NpcOtherland|Player
-        if (interest.class == "npcOtherland" or interest.class == "player") and npc.threatList[interest.avatar_id] == nil then
-            if interest:GetPosition():Distance(npc:GetPosition()) <= visionRange then
-                local affiliation = npc:RelationshipTo(interest)
-                if affiliation == Relationship.Affiliation.Hostile and interest:Get("alive") then
-                    npc.threatList[interest.avatar_id] = {
-                        entity = interest,
-                        distance = 0,
-                        damage = 0,
-                        bonus = 0,
-                    }
+        -- Add entities we see to threat list
+        for _, interest in ipairs(interests) do
+            ---@cast interest NpcOtherland|Player
+            if (interest.class == "npcOtherland" or interest.class == "player") and npc.threatList[interest.avatar_id] == nil then
+                if interest:GetPosition():Distance(npc:GetPosition()) <= visionRange then
+                    local affiliation = npc:RelationshipTo(interest)
+                    if affiliation == Relationship.Affiliation.Hostile and interest:IsAlive() then
+                        npc.threatList[interest.avatar_id] = {
+                            entity = interest,
+                            damage = 0,
+                            bonus = 0,
+                            distance = interest:GetPosition():Distance(npc:GetPosition()),
+                        }
+                    end
                 end
             end
         end
@@ -119,12 +121,16 @@ function UpdateThreatList(npc, dt)
 
     -- Update threat list
     for k, v in pairs(npc.threatList) do
-        if not v.entity:Get("alive") then
+        if 
+            (not v.entity:IsValid()) or 
+            (not v.entity:IsAlive()) or 
+            v.entity:GetPosition():Distance(npc:GetPosition()) > evadeRange
+        then
+            Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. npc.name)
             npc.threatList[k] = nil
         else
-            local distance = v.entity:GetPosition():Distance(npc:GetPosition())
-            v.distance = distance
-            v.total = v.damage + v.bonus - (v.distance * 0.5) 
+            v.distance = v.entity:GetPosition():Distance(npc:GetPosition())
+            v.total = v.damage + v.bonus
         end
     end
 
@@ -136,7 +142,9 @@ function UpdateThreatList(npc, dt)
     end
 
     table.sort(npc.threatRank, function(a, b)
-        return npc.threatList[a].total > npc.threatList[b].total
+        return 
+            (npc.threatList[a].total == npc.threatList[b].total and npc.threatList[a].distance < npc.threatList[b].distance) or
+            (npc.threatList[a].total > npc.threatList[b].total)
     end)
 
     return Behavior.Result.Success, 0
@@ -243,7 +251,7 @@ end
 function CastAbility(npc, dt)
     local executionTime = npc.choosenAbility:Get("executionTime")
 
-    if #npc.choosenAbility:Get("externalCooldownsConsumed") == 0 and npc.choosenAbility:Get("isAutoAttack") then
+    if #npc.choosenAbility:Get("externalCooldownsConsumed") == 0 then
         if not npc:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}) then
             return Behavior.Result.Failure, 0
         end
@@ -253,19 +261,13 @@ function CastAbility(npc, dt)
         end
     end
 
-    if #npc.choosenAbility:Get("externalCooldownsEmitted") == 0 and npc.choosenAbility:Get("isAutoAttack") then
+    if #npc.choosenAbility:Get("externalCooldownsEmitted") == 0 then
         npc:EmitCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime)
     else
         npc:EmitCooldown(npc.choosenAbility:Get("externalCooldownsEmitted"), executionTime)
     end
 
     local target = npc:GetTarget()
-
-    if target == nil then
-        --Log.Debug("Npc:CastAbility - No target found")
-    else
-        --Log.Debug("Npc:CastAbility - Target found " .. target.name)
-    end
 
     if target == nil or (target.class ~= "player" and target.class ~= "npcOtherland") then
         target = nil
@@ -739,6 +741,14 @@ function Npc:WalkToNode(node)
 
         self:Set("moveDest", targetPos)
         self:Set("moveSpeed", self:Get("walkSpeed"))
+    end
+end
+
+function Npc:IsAlive()
+    if self:Get("hpCur") > self:Get("hpMin") then
+        return true
+    else
+        return false
     end
 end
 

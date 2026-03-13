@@ -45,6 +45,11 @@ function Entity:Reset(...)
     end
 end
 
+---@return boolean
+function Entity:IsValid()
+    return __engine.gameobject.IsValid(self)
+end
+
 ---@type fun(self:Entity)
 Entity.Init = nil
 
