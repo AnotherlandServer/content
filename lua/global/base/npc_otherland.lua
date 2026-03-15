@@ -106,7 +106,14 @@ function UpdateThreatList(npc, dt)
             if (interest.class == "npcOtherland" or interest.class == "player") and npc.threatList[interest.avatar_id] == nil then
                 if interest:GetPosition():Distance(npc:GetPosition()) <= visionRange then
                     local affiliation = npc:RelationshipTo(interest)
-                    if affiliation == Relationship.Affiliation.Hostile and interest:IsAlive() then
+
+                    if 
+                        affiliation == Relationship.Affiliation.Hostile and 
+                        interest:IsAlive() and
+                        interest:Get("isUnAttackable") ~= true
+                    then
+                        Log.Debug("Npc:UpdateThreatList - Adding " .. interest.name .. " to threat list of " .. npc.name)
+
                         npc.threatList[interest.avatar_id] = {
                             entity = interest,
                             damage = 0,
@@ -124,9 +131,10 @@ function UpdateThreatList(npc, dt)
         if 
             (not v.entity:IsValid()) or 
             (not v.entity:IsAlive()) or 
-            v.entity:GetPosition():Distance(npc:GetPosition()) > evadeRange
+            (v.entity:GetPosition():Distance(npc:GetPosition()) > evadeRange) or
+            v.entity:Get("isUnAttackable")
         then
-            Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. npc.name)
+            --Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. npc.name)
             npc.threatList[k] = nil
         else
             v.distance = v.entity:GetPosition():Distance(npc:GetPosition())
@@ -314,23 +322,23 @@ function ReturnFromCombat(npc, dt)
 
     if moveDest.x ~= 0.0 and moveDest.y ~= 0.0 and moveDest.z ~= 0.0 then
         if npc:GetPosition():Distance(moveDest) > 0.1 then
-            -- Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
+            --Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
 
             npc:MoveToPosition(moveDest, npc:Get("moveSpeed"), npc.pathing_callback)
 
-            return Behavior.Result.Running, dt
+            return Behavior.Result.Success, dt
         else
             return Behavior.Result.Success, 0
         end
     else
         if npc:GetPosition():Distance(npc:Get("spawnPosition")) > 0.1 then
-            -- Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "]")
+            --Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "] distance " .. npc:GetPosition():Distance(npc:Get("spawnPosition")))
 
         
             -- Return to spawn position
             npc:MoveToPosition(npc:Get("spawnPosition"), npc:Get("walkSpeed"), npc.pathing_callback)
 
-            return Behavior.Result.Running, dt
+            return Behavior.Result.Success, dt
         else
             return Behavior.Result.Success, 0
         end
@@ -429,7 +437,13 @@ Npc:On("Spawned",
         self:Set("statHitChance", math.max(generalDifficulty, 1))
         self:Set("statFinalDamageMod", math.max(generalDifficulty, 1))
 
-        self:Set("spawnPosition", self:GetPosition())
+        local spawnPos = self:GetPosition()
+        local floorHeight = GetWorld():GetFloorHeight(spawnPos)
+        if floorHeight then
+            spawnPos.y = floorHeight
+        end
+
+        self:Set("spawnPosition", spawnPos)
         self:Set("spawnRotation", self:GetRotation() * Vector.Z)
 
         local defaultWeapons = self:Get("defaultWeapon") --[[@as ContentRef[] ]]
@@ -745,11 +759,7 @@ function Npc:WalkToNode(node)
 end
 
 function Npc:IsAlive()
-    if self:Get("hpCur") > self:Get("hpMin") then
-        return true
-    else
-        return false
-    end
+    return self:Get("alive")
 end
 
 return Npc

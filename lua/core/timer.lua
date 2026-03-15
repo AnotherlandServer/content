@@ -14,8 +14,8 @@ local Events = require("core.events")
 local Timer = Class()
 
 ---@param owner Entity
----@param interval number
----@param max_duration? number
+---@param interval number in seconds
+---@param max_duration? number in seconds
 ---@param callback fun(timer: Timer, stopping: boolean)
 ---@return Timer
 function Timer:Start(owner, interval, max_duration, callback)
@@ -44,7 +44,7 @@ function Timer:Start(owner, interval, max_duration, callback)
 end
 
 ---@param owner Entity
----@param delay number
+---@param delay number in seconds
 ---@param callback fun()
 ---@return Timer
 function Timer:SingleShot(owner, delay, callback)

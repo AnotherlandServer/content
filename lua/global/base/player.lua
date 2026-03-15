@@ -4,6 +4,7 @@
 -- For details, see the LICENSE.md file in the repository.
 
 --- @module "core.base_quest"
+--- @module "global.base.structure"
 
 local Class = require("core.class")
 local Entity = require("core.entity")
@@ -11,9 +12,9 @@ local Timer = require("core.timer")
 local AbilityEvent = require("engine.ability_event")
 local Relationship = require("core.relationship")
 local QuestLog = require("engine.quest_log")
-local HitTable = require("engine.hit_table")
 local GetWorld = require("engine.world")
 local Interaction = require("engine.interaction")
+local AvatarFilter = require("engine.avatar_filter")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -102,6 +103,9 @@ Player.AddBehavior("travel", function (self, _, dest)
     end
 end)
 
+---@param self Player
+---@param _ any
+---@param variant string
 Player.AddBehavior("respawnnow", function (self, _, variant)
     Log.Debug("Requesting respawn for player " .. self.name .. " - variant " .. variant)
 
@@ -109,7 +113,7 @@ Player.AddBehavior("respawnnow", function (self, _, variant)
         local portals = GetWorld():FindEntitiesByClass("portal")
         ---@cast portals Portal[]
 
-        local nearest_portal = nil
+        local nearest_portal = nil ---@type Portal?
 
         for _,v in pairs(portals) do
             if nearest_portal == nil then
@@ -127,19 +131,55 @@ Player.AddBehavior("respawnnow", function (self, _, variant)
         if nearest_portal then
             Log.Debug("Nearest Portal: " .. nearest_portal.name .. " - " .. nearest_portal.placement_guid)
 
-            self:TravelToPortal(nearest_portal.placement_guid)
+            local exitPoint = nearest_portal:Get("exitPoint") ---@type string
+            local respawnPos = nearest_portal:GetPosition()
+            local respawnRot = nearest_portal:GetRotation()
 
-            self:Set("hpCur", self:Get("hpMax"))
-            self:Set("alive", true)
+            if string.len(exitPoint) > 0 then
+                -- Lookup exit node
+                local exitPoint = GetWorld():FindEntitiesWithFilter(AvatarFilter.FindByInstanceId(exitPoint)) ---@type Structure[]
+                
+                if #exitPoint > 0 then
+                    respawnPos = exitPoint[1]:GetPosition()
+                    respawnRot = exitPoint[1]:GetRotation()
+                end
+            end
+
+            self:RunCinematic("PortalDepartDefault")
+
+            Timer:SingleShot(self, 3, function()
+                self:Set("isUnAttackable", true)
+                __engine.combat.Revive(self, self, self:Get("hpMax") / 2)
+                self:Respawn(respawnPos, respawnRot)
+            end)
         else
             Log.Warn("No portals found for respawn")
         end
+    elseif variant == "Corpse" or variant == "Premium" then
+        self:Set("cooldownPassed", false)
+        self:RunCinematic("PortalDepartDefault")
+
+        Timer:SingleShot(self, 2, function()
+            self:Set("isUnAttackable", true)
+            __engine.combat.Revive(self, self, self:Get("hpMax") / 2)
+            self:Respawn(self:GetPosition(), self:GetRotation())
+        end)
+
+        Timer:SingleShot(self, 30, function()
+            self:Set("cooldownPassed", true)
+        end)
     end
 end)
 
+---@param self Player
 Player.AddBehavior("promptcooldown", function (self)
     self:ConsumeCooldown({[1] = "7daff75b-6078-419b-aa75-c06799b21bf8"})
     self:EmitCooldown({[1] = "7daff75b-6078-419b-aa75-c06799b21bf8"}, 1)   
+end)
+
+---@param self Player
+Player.AddBehavior("disableinvulnerability", function (self)
+    self:Set("isUnAttackable", false)
 end)
 
 function Player:Init()
@@ -531,6 +571,15 @@ function Player:EmitCooldown(cooldowns, duration)
 end
 
 function Player:Spawn()
+    if not self:Get("cooldownPassed") then
+        Timer:SingleShot(self, 60, function()
+            self:Set("cooldownPassed", true)
+        end)
+    end
+
+    -- Fallback in case the player logged out during post-death invulnerability
+    self:Set("isUnAttackable", false)
+
     __engine.player.Spawn(self)
 end
 
@@ -876,6 +925,12 @@ end
 ---@param portal_id string
 function Player:TravelToPortal(portal_id)
     __engine.player.TravelToPortal(self, portal_id)
+end
+
+---@param position Vector
+---@param rotation Quaternion
+function Player:Respawn(position, rotation)
+    __engine.player.Respawn(self, position, rotation)
 end
 
 ---@param cinematic string
