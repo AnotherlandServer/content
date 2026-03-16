@@ -35,6 +35,12 @@ function Entity:Set(...)
     end
 end
 
+---@overload fun(self:Entity, key:string, value:any): any
+function Entity:ForceSet(key, value)
+return __engine.gameobject.ForceSet(self, key, value)
+end
+
+
 ---@overload fun(self:Entity, key:string): any
 ---@overload fun(self:Entity, player:Player, key:string): any
 function Entity:Reset(...)

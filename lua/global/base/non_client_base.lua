@@ -34,7 +34,7 @@ end
 
 ---Adds a behavior
 ---@param name string
----@param callback function
+---@param callback function(npc: NonClientBase, instigator: Player|NpcOtherland, ...): number
 function NonClientBase:AddBehavior(name, callback)
     if not rawget(self, "_BEHAVIOR") then
         rawset(self, "_BEHAVIOR", {})
@@ -79,13 +79,13 @@ end
 ---@param anim string
 ---@param duration number
 function NonClientBase:PlayAnimation(anim, duration)
-    self:Set("action0", { anim, GetWorld():CurrentTime() })
-    self:Set("action0Duration", duration)
+    self:ForceSet("action0", { anim, GetWorld():CurrentTime() })
+    self:ForceSet("action0Duration", duration)
 end
 
 function NonClientBase:CancelAnimation()
-    self:Set("action0", { "", 0 })
-    self:Set("action0Duration", 0)
+    self:ForceSet("action0", { "", 0 })
+    self:ForceSet("action0Duration", 0)
 end
 
 ---@param player Player

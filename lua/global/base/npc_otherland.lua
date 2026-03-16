@@ -4,6 +4,7 @@
 -- For details, see the LICENSE.md file in the repository.
 
 ---@module "core.base_quest"
+---@module "engine.behavior_config"
 
 local Class = require("core.class")
 local Timer = require("core.timer")
@@ -14,6 +15,7 @@ local Dump = require("core.dump")
 local EdnaAbility = require("global.base.edna_ability")
 local AbilityEvent = require("engine.ability_event")
 local LootTable = require("engine.loot_table")
+local ActionSettings = require("engine.action_settings")
 
 
 ---@class NpcOtherland: NonClientBase
@@ -26,6 +28,8 @@ local LootTable = require("engine.loot_table")
 ---@field threatList { [AvatarId]: { entity: Player|NpcOtherland, distance: number, damage: number, bonus: number, total: number } }
 ---@field threatRank AvatarId[]
 ---@field currentTarget Player|NpcOtherland?
+---@field behaviors { [string]: BehaviorConfigEntry }
+---@field activeBehavior { name: string, type: string, started: number, duration: number }?
 local Npc = Class(NonClientBase)
 
 --- Compute NPC base values
@@ -50,75 +54,73 @@ for i = 1, 64 do
     table.insert(AttackPowerTable, math.floor((0.171305 * i ^ 2) - 0.27783 * i + 0.10653))
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function ChooseAbility(npc, dt)
-    if npc.choosenAbility == nil and npc.choosenWeapon == nil then
-        local defaultWeapons = npc:Get("defaultWeapon") --[[@as ContentRef[] ]]
+function Npc:ChooseAbility(dt)
+    if self.choosenAbility == nil and self.choosenWeapon == nil then
+        local defaultWeapons = self:Get("defaultWeapon") --[[@as ContentRef[] ]]
 
         if #defaultWeapons > 0 then
-            local weapon = npc:GetItem(defaultWeapons[1].id) --[[@as EdnaFunction?]]
+            local weapon = self:GetItem(defaultWeapons[1].id) --[[@as EdnaFunction?]]
             if weapon ~= nil then
-                npc.choosenWeapon = weapon 
-                npc.choosenAbility = weapon.NormalAttack
+                self.choosenWeapon = weapon 
+                self.choosenAbility = weapon.NormalAttack
 
-                if npc.choosenWeapon == nil or npc.choosenAbility == nil then
-                    --Log.Err("Npc:ChooseAbility - No weapon or ability found for " .. npc.name)
+                if self.choosenWeapon == nil or self.choosenAbility == nil then
+                    --Log.Err("Npc:ChooseAbility - No weapon or ability found for " .. self.name)
                     return Behavior.Result.Failure, 0
                 end
 
 
-                npc:Set("weapon", { defaultWeapons[1].id, "00000000-0000-0000-0000-000000000000" })
+                self:Set("weapon", { defaultWeapons[1].id, "00000000-0000-0000-0000-000000000000" })
 
                 return Behavior.Result.Success, 0
             else
                 Log.Err("Npc:ChooseAbility - Default weapon not found: " .. tostring(defaultWeapons[1]))
             end
-        elseif #npc.abilities > 0 then
-            npc.choosenAbility = npc.abilities[1]
-            npc.choosenWeapon = nil
+        elseif #self.abilities > 0 then
+            self.choosenAbility = self.abilities[1]
+            self.choosenWeapon = nil
 
             return Behavior.Result.Success, 0
         end
 
-        Log.Err("Npc:ChooseAbility - No ability found for " .. npc.name)
+        Log.Err("Npc:ChooseAbility - No ability found for " .. self.name)
         return Behavior.Result.Failure, 0
     else
         return Behavior.Result.Success, 0
     end
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function UpdateThreatList(npc, dt)
-    local evadeRange = npc:Get("evadeRange")
+function Npc:UpdateThreatList(dt)
+    local evadeRange = self:Get("evadeRange")
 
     -- If npc searches for enemies, we add visible hostile entities to the threat list
-    if npc:Get("willSearchForEnemy") then
-        local interests = npc:GetInterests()
-        local visionRange = npc:Get("visionRange")
+    if self:Get("willSearchForEnemy") then
+        local interests = self:GetInterests()
+        local visionRange = self:Get("visionRange")
 
         -- Add entities we see to threat list
         for _, interest in ipairs(interests) do
             ---@cast interest NpcOtherland|Player
-            if (interest.class == "npcOtherland" or interest.class == "player") and npc.threatList[interest.avatar_id] == nil then
-                if interest:GetPosition():Distance(npc:GetPosition()) <= visionRange then
-                    local affiliation = npc:RelationshipTo(interest)
+            if (interest.class == "npcOtherland" or interest.class == "player") and self.threatList[interest.avatar_id] == nil then
+                if interest:GetPosition():Distance(self:GetPosition()) <= visionRange then
+                    local affiliation = self:RelationshipTo(interest)
 
                     if 
                         affiliation == Relationship.Affiliation.Hostile and 
                         interest:IsAlive() and
                         interest:Get("isUnAttackable") ~= true
                     then
-                        Log.Debug("Npc:UpdateThreatList - Adding " .. interest.name .. " to threat list of " .. npc.name)
+                        Log.Debug("Npc:UpdateThreatList - Adding " .. interest.name .. " to threat list of " .. self.name)
 
-                        npc.threatList[interest.avatar_id] = {
+                        self.threatList[interest.avatar_id] = {
                             entity = interest,
                             damage = 0,
                             bonus = 0,
-                            distance = interest:GetPosition():Distance(npc:GetPosition()),
+                            distance = interest:GetPosition():Distance(self:GetPosition()),
                         }
                     end
                 end
@@ -127,54 +129,53 @@ function UpdateThreatList(npc, dt)
     end
 
     -- Update threat list
-    for k, v in pairs(npc.threatList) do
+    for k, v in pairs(self.threatList) do
         if 
             (not v.entity:IsValid()) or 
             (not v.entity:IsAlive()) or 
-            (v.entity:GetPosition():Distance(npc:GetPosition()) > evadeRange) or
+            (v.entity:GetPosition():Distance(self:GetPosition()) > evadeRange) or
             v.entity:Get("isUnAttackable")
         then
-            --Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. npc.name)
-            npc.threatList[k] = nil
+            --Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. self.name)
+            self.threatList[k] = nil
         else
-            v.distance = v.entity:GetPosition():Distance(npc:GetPosition())
+            v.distance = v.entity:GetPosition():Distance(self:GetPosition())
             v.total = v.damage + v.bonus
         end
     end
 
     -- Sort threat ranks by sum total
-    npc.threatRank = {}
+    self.threatRank = {}
 
-    for k, _ in pairs(npc.threatList) do
-        table.insert(npc.threatRank, k)
+    for k, _ in pairs(self.threatList) do
+        table.insert(self.threatRank, k)
     end
 
-    table.sort(npc.threatRank, function(a, b)
+    table.sort(self.threatRank, function(a, b)
         return 
-            (npc.threatList[a].total == npc.threatList[b].total and npc.threatList[a].distance < npc.threatList[b].distance) or
-            (npc.threatList[a].total > npc.threatList[b].total)
+            (self.threatList[a].total == self.threatList[b].total and self.threatList[a].distance < self.threatList[b].distance) or
+            (self.threatList[a].total > self.threatList[b].total)
     end)
 
     return Behavior.Result.Success, 0
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function UpdateTarget(npc, dt)
-    local currentTarget = npc:GetTarget()
+function Npc:UpdateTarget(dt)
+    local currentTarget = self:GetTarget()
     
     local nextTarget = nil
-    if #npc.threatRank > 0 then
-        nextTarget = npc.threatList[npc.threatRank[1]].entity
+    if #self.threatRank > 0 then
+        nextTarget = self.threatList[self.threatRank[1]].entity
     end
 
     -- Check if we have to switch target
-    if currentTarget and npc.threatList[currentTarget.avatar_id] ~= nil and nextTarget ~= nil then 
-        if npc.threatList[nextTarget.avatar_id].total / npc.threatList[currentTarget.avatar_id].total > 1.02 then
+    if currentTarget and self.threatList[currentTarget.avatar_id] ~= nil and nextTarget ~= nil then 
+        if self.threatList[nextTarget.avatar_id].total / self.threatList[currentTarget.avatar_id].total > 1.02 then
             --Log.Debug("Npc:UpdateTarget - Switching target from " .. currentTarget.name .. " to " .. nextTarget.name)
-            npc.currentTarget = nextTarget
-            npc:Set("target", nextTarget.avatar_id)
+            self.currentTarget = nextTarget
+            self:Set("target", nextTarget.avatar_id)
         end
 
         return Behavior.Result.Success, 0
@@ -182,24 +183,23 @@ function UpdateTarget(npc, dt)
 
     -- If we have no target, find a new one
     if nextTarget ~= nil then
-        npc.currentTarget = nextTarget
-        npc:Set("target", nextTarget.avatar_id)
+        self.currentTarget = nextTarget
+        self:Set("target", nextTarget.avatar_id)
 
         return Behavior.Result.Success, 0
     end
 
     -- No target found
-    npc.currentTarget = nil
-    npc:Set("isInCombat", false)
+    self.currentTarget = nil
+    self:Set("isInCombat", false)
 
     return Behavior.Result.Failure, 0
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function GetInTargetRange(npc, dt)
-    local target = npc:GetTarget()
+function Npc:GetInTargetRange(dt)
+    local target = self:GetTarget()
     ---@cast target NpcOtherland|Player?
 
     if target == nil then
@@ -207,7 +207,7 @@ function GetInTargetRange(npc, dt)
     end
 
     local targetPos = target:GetPosition()
-    local npcPos = npc:GetPosition()
+    local npcPos = self:GetPosition()
     local updatePath = false
     local floorHeight = GetWorld():GetFloorHeight(targetPos)
 
@@ -215,14 +215,14 @@ function GetInTargetRange(npc, dt)
         targetPos.y = floorHeight
     end
 
-    if npc._targetPos == nil or npc._targetPos ~= targetPos then 
-        npc._targetPos = target:GetPosition()
+    if self._targetPos == nil or self._targetPos ~= targetPos then 
+        self._targetPos = target:GetPosition()
         updatePath = true
     end
 
-    local rangeMax = npc.choosenAbility:Get("RangeMax") --[[@as number]]
-    local rangeMin = npc.choosenAbility:Get("RangeMin") --[[@as number]]
-    local collisionExtent = npc:Get("collisionExtent") --[[@as Vector]]
+    local rangeMax = self.choosenAbility:Get("RangeMax") --[[@as number]]
+    local rangeMin = self.choosenAbility:Get("RangeMin") --[[@as number]]
+    local collisionExtent = self:Get("collisionExtent") --[[@as Vector]]
     local targetCollisionExtent = target:Get("collisionExtent") --[[@as Vector]]
 
     local touchRange = math.max(collisionExtent.x, collisionExtent.z, targetCollisionExtent.x, targetCollisionExtent.z)
@@ -231,51 +231,50 @@ function GetInTargetRange(npc, dt)
         rangeMin = touchRange
     end
 
-    if npc._pathingState == "FINISHED" then
+    if self._pathingState == "FINISHED" then
         if npcPos:Distance(targetPos) >= rangeMax then
             updatePath = true
         else
             return Behavior.Result.Success, 0
         end
-    elseif npc._pathingState ~= "FINISHED" and npcPos:Distance(targetPos) <= rangeMax then
+    elseif self._pathingState ~= "FINISHED" and npcPos:Distance(targetPos) <= rangeMax then
         --Log.Debug("Npc:GetInTargetRange - Target in rage")
 
-        npc:CancelMovement()
+        self:CancelMovement()
         
         return Behavior.Result.Success, 0
     end
 
     if updatePath then
         -- Move to target position
-        npc:MoveToPosition(targetPos, npc:Get("runSpeed"), npc.pathing_callback)
+        self:MoveToPosition(targetPos, self:Get("runSpeed"), self.pathing_callback)
     end
 
     return Behavior.Result.Running, dt
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function CastAbility(npc, dt)
-    local executionTime = npc.choosenAbility:Get("executionTime")
+function Npc:DoCastAbility(dt)
+    local executionTime = self.choosenAbility:Get("executionTime")
 
-    if #npc.choosenAbility:Get("externalCooldownsConsumed") == 0 then
-        if not npc:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}) then
+    if #self.choosenAbility:Get("externalCooldownsConsumed") == 0 then
+        if not self:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}) then
             return Behavior.Result.Failure, 0
         end
     else
-        if not npc:ConsumeCooldown(npc.choosenAbility:Get("externalCooldownsConsumed")) then
+        if not self:ConsumeCooldown(self.choosenAbility:Get("externalCooldownsConsumed")) then
             return Behavior.Result.Failure, 0
         end
     end
 
-    if #npc.choosenAbility:Get("externalCooldownsEmitted") == 0 then
-        npc:EmitCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime)
+    if #self.choosenAbility:Get("externalCooldownsEmitted") == 0 then
+        self:EmitCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime)
     else
-        npc:EmitCooldown(npc.choosenAbility:Get("externalCooldownsEmitted"), executionTime)
+        self:EmitCooldown(self.choosenAbility:Get("externalCooldownsEmitted"), executionTime)
     end
 
-    local target = npc:GetTarget()
+    local target = self:GetTarget()
 
     if target == nil or (target.class ~= "player" and target.class ~= "npcOtherland") then
         target = nil
@@ -283,68 +282,125 @@ function CastAbility(npc, dt)
 
     --[[@cast target Player|NpcOtherland]]
 
-    local executionTime = npc:CastAbility(npc.choosenAbility, npc.choosenWeapon --[[@as EdnaFunction?]])
+    local executionTime = self:CastAbility(self.choosenAbility, self.choosenWeapon --[[@as EdnaFunction?]])
 
     return Behavior.Result.Running, executionTime
 end
 
----@param npc NpcOtherland
 ---@return Behavior.Result, number
-function FindTarget(npc)
-    npc.currentTarget = nil
+function Npc:FindTarget()
+    self.currentTarget = nil
 
-    if #npc.threatRank == 0 then
-        npc:Set("isInCombat", false)
+    if #self.threatRank == 0 then
+        self:Set("isInCombat", false)
         return Behavior.Result.Failure, 0
     end
 
-    npc.currentTarget = npc.threatList[npc.threatRank[1]].entity
-    npc:Set("isInCombat", true)
+    self.currentTarget = self.threatList[self.threatRank[1]].entity
+    self:Set("isInCombat", true)
 
     return Behavior.Result.Success, 0
 end
 
----@param npc NpcOtherland
 ---@return Behavior.Result, number
-function IsInCombat(npc)
-    if npc:IsInCombat() then
+function Npc:CheckIsInCombat()
+    if self:IsInCombat() then
         return Behavior.Result.Success, 0
     else
         return Behavior.Result.Failure, 0
     end
 end
 
----@param npc NpcOtherland
 ---@param dt number
 ---@return Behavior.Result, number
-function ReturnFromCombat(npc, dt)
-    local moveDest = npc:Get("moveDest") --[[@as Vector]]
+function Npc:ReturnFromCombat(dt)
+    local moveDest = self:Get("moveDest") --[[@as Vector]]
 
     if moveDest.x ~= 0.0 and moveDest.y ~= 0.0 and moveDest.z ~= 0.0 then
-        if npc:GetPosition():Distance(moveDest) > 0.1 then
+        if self:GetPosition():Distance(moveDest) > 0.1 then
             --Log.Debug("Npc:ReturnFromCombat - Returning to position [" .. moveDest.x .. ", " .. moveDest.y .. ", " .. moveDest.z .. "]")
 
-            npc:MoveToPosition(moveDest, npc:Get("moveSpeed"), npc.pathing_callback)
+            self:MoveToPosition(moveDest, self:Get("moveSpeed"), self.pathing_callback)
 
             return Behavior.Result.Success, dt
         else
             return Behavior.Result.Success, 0
         end
     else
-        if npc:GetPosition():Distance(npc:Get("spawnPosition")) > 0.1 then
-            --Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. npc:Get("spawnPosition").x .. ", " .. npc:Get("spawnPosition").y .. ", " .. npc:Get("spawnPosition").z .. "] distance " .. npc:GetPosition():Distance(npc:Get("spawnPosition")))
+        if self:GetPosition():Distance(self:Get("spawnPosition")) > 0.1 then
+            --Log.Debug("Npc:ReturnFromCombat - Returning to spawn position [" .. self:Get("spawnPosition").x .. ", " .. self:Get("spawnPosition").y .. ", " .. self:Get("spawnPosition").z .. "] distance " .. self:GetPosition():Distance(self:Get("spawnPosition")))
 
         
             -- Return to spawn position
-            npc:MoveToPosition(npc:Get("spawnPosition"), npc:Get("walkSpeed"), npc.pathing_callback)
+            self:MoveToPosition(self:Get("spawnPosition"), self:Get("walkSpeed"), self.pathing_callback)
 
             return Behavior.Result.Success, dt
         else
             return Behavior.Result.Success, 0
         end
     end
+end
 
-    
+---@param name string
+---@return Behavior
+function Npc.RunBehavior(name)
+    return Behavior.Script(
+        ---@param npc NpcOtherland
+        ---@param dt number
+        ---@return integer
+        ---@return integer
+        function (npc, dt)
+            if npc:IsRunningBehavior() and npc.activeBehavior.type == name then
+                return Behavior.Result.Running, dt
+            end
+
+            if npc.behaviors[name] == nil then
+                return Behavior.Result.Failure, 0
+            end
+
+            local totalWeight = 0
+            for _, child in ipairs(npc.behaviors[name].allowedChildren or {}) do
+                totalWeight = totalWeight + (child.weight or 1)
+            end
+
+            local randomWeight = math.random() * totalWeight
+
+            local selectedChild = nil ---@type AllowedChild?
+            for _, child in ipairs(npc.behaviors[name].allowedChildren or {}) do
+                local weight = child.weight or 1
+                if randomWeight <= weight then
+                    selectedChild = child
+                    break
+                end
+                randomWeight = randomWeight - weight
+            end
+
+            if not selectedChild then
+                return Behavior.Result.Failure, 0
+            end
+
+            local params = {}
+
+            for _, setting in ipairs(selectedChild.settings or {}) do
+                params[setting.settingName] = setting.settingValue
+            end
+
+            local behavior = Npc._BEHAVIOR[selectedChild.behaviorName]
+
+            if behavior then
+                npc.activeBehavior = {
+                    name = selectedChild.behaviorName,
+                    type = name,
+                    started = GetWorld():CurrentTime(),
+                    duration = behavior(npc, npc, params),
+                }
+            else
+                Log.Warn("Npc.RunBehavior - No behavior found for " .. selectedChild.behaviorName)
+            end
+            
+            return Behavior.Result.Success, 0
+        end
+    )
 end
 
 local BehaviorTree = Behavior.Sequence({
@@ -358,19 +414,22 @@ local BehaviorTree = Behavior.Sequence({
         end),
         Behavior.Wait(0),
         Behavior.Sequence({
-            Behavior.Script(UpdateThreatList),
+            Behavior.Script(Npc.UpdateThreatList),
             Behavior.If(
-                Behavior.Script(IsInCombat),
+                Behavior.Script(Npc.CheckIsInCombat),
                 Behavior.Sequence({
-                    Behavior.Script(ChooseAbility),
-                    Behavior.Script(UpdateTarget),
-                    Behavior.Script(GetInTargetRange),
-                    Behavior.Script(CastAbility),
+                    Behavior.Script(Npc.ChooseAbility),
+                    Behavior.Script(Npc.UpdateTarget),
+                    Behavior.Script(Npc.GetInTargetRange),
+                    Behavior.Script(Npc.DoCastAbility),
                 }),
                 Behavior.If(
-                    Behavior.Script(FindTarget),
+                    Behavior.Script(Npc.FindTarget),
                     Behavior.Wait(0),
-                    Behavior.Script(ReturnFromCombat)
+                    Behavior.Sequence({
+                        Behavior.Script(Npc.ReturnFromCombat),
+                        Npc.RunBehavior("FreeTime"),
+                    })
                 )
             )
         })
@@ -386,6 +445,28 @@ function Npc:Init()
     self.abilities = {}
     self.threatList = {}
     self.threatRank = {}
+
+    self.behaviors = {}
+    self.behaviors["FreeTime"] = self:FindBehavior("FreeTime")
+
+    if self.behaviors["FreeTime"] == nil then
+        self.behaviors["FreeTime"] = {
+            behaviorName = "FreeTime",
+            allowedChildren = {
+                {
+                    behaviorName = "RandomWalk",
+                    weight = 1,
+                    settings = {}
+                },
+                {
+                    behaviorName = "Wait",
+                    weight = 10,
+                    settings = {}
+                }
+            },
+            settings = {}
+        }
+    end
 
     local abilityCount = __engine.ability.GetNpcAbilityCount(self)
 
@@ -406,11 +487,39 @@ function Npc:Init()
 
     NonClientBase.Init(self)
 
-    self:InstallBehavior(BehaviorTree)
+    self:InstallBehavior(BehaviorTree:Compile(self))
 
     self.pathing_callback = function(state, pos)
         self._pathingState = state
     end
+end
+
+---@return BehaviorConfigEntry?
+function Npc:FindBehavior(behaviorName)
+    local config = self:Get("behaviorConfig") --[[@as BehaviorConfig?]]
+
+    if type(config) ~= "table" or type(config.configurations) ~= "table" then
+        return nil
+    end
+
+    for _, behavior in ipairs(config.configurations) do
+        if behavior.behaviorName == behaviorName then
+            return behavior
+        end
+    end
+
+    return nil
+end
+
+function Npc:IsRunningBehavior()
+    if 
+        self.activeBehavior ~= nil and
+        (self.activeBehavior.started + self.activeBehavior.duration) > GetWorld():CurrentTime()
+    then
+        return true
+    end
+
+    return false
 end
 
 Npc:On("Spawned",
@@ -418,8 +527,6 @@ Npc:On("Spawned",
     function(self)
         local lvl = self:Get("lvl")
         local generalDifficulty = self:Get("generalDifficulty")
-
-        --Log.Debug("GD " .. generalDifficulty)
 
         self.threatList = {}
         self.threatRank = {}
@@ -512,43 +619,79 @@ Npc:On("OnDamage",
     end)
 
 ---MetaMorph vendor execute
----@param player Player
+---@param instigator Player
 ---@param ... any
-function Npc:DoVendorExecute(player, ...)
+function Npc:DoVendorExecute(instigator, ...)
     local params = { ... }
 
     -- Apply metamorph customization parameters
-    player:Set("customizationGender", params[1])
-    player:Set("customizationHeight", params[2])
-    player:Set("customizationFat", params[3])
-    player:Set("customizationSkinny", params[4])
-    player:Set("customizationMuscular", params[5])
-    player:Set("customizationBustSize", params[6])
-    player:Set("race", params[7])
-    player:Set("customizationBrowAngle", params[8])
-    player:Set("customizationEyeBrowPos", params[9])
-    player:Set("customizationEyePosSpacing", params[10])
-    player:Set("customizationEyePos", params[11])
-    player:Set("customizationEyeSizeLength", params[12])
-    player:Set("customizationEyeSizeWidth", params[13])
-    player:Set("customizationEyesPretty", params[14])
-    player:Set("customizationMouthPos", params[15])
-    player:Set("customizationMouthWidth", params[16])
-    player:Set("customizationMouthLowerLipThic", params[17])
-    player:Set("customizationMouthUpperLipThic", params[18])
-    player:Set("customizationMouthExpression", params[19])
-    player:Set("customizationNosePosLength", params[20])
-    player:Set("customizationNosePosWidth", params[21])
-    player:Set("customizationNosePortude", params[22])
-    player:Set("customizationEarSize", params[23])
-    player:Set("customizationEarElf", params[24])
-    player:Set("customizationCheekBone", params[25])
-    player:Set("customizationCheek", params[26])
-    player:Set("customizationChinPortude", params[27])
-    player:Set("customizationJawChubby", params[28])
+    instigator:Set("customizationGender", params[1])
+    instigator:Set("customizationHeight", params[2])
+    instigator:Set("customizationFat", params[3])
+    instigator:Set("customizationSkinny", params[4])
+    instigator:Set("customizationMuscular", params[5])
+    instigator:Set("customizationBustSize", params[6])
+    instigator:Set("race", params[7])
+    instigator:Set("customizationBrowAngle", params[8])
+    instigator:Set("customizationEyeBrowPos", params[9])
+    instigator:Set("customizationEyePosSpacing", params[10])
+    instigator:Set("customizationEyePos", params[11])
+    instigator:Set("customizationEyeSizeLength", params[12])
+    instigator:Set("customizationEyeSizeWidth", params[13])
+    instigator:Set("customizationEyesPretty", params[14])
+    instigator:Set("customizationMouthPos", params[15])
+    instigator:Set("customizationMouthWidth", params[16])
+    instigator:Set("customizationMouthLowerLipThic", params[17])
+    instigator:Set("customizationMouthUpperLipThic", params[18])
+    instigator:Set("customizationMouthExpression", params[19])
+    instigator:Set("customizationNosePosLength", params[20])
+    instigator:Set("customizationNosePosWidth", params[21])
+    instigator:Set("customizationNosePortude", params[22])
+    instigator:Set("customizationEarSize", params[23])
+    instigator:Set("customizationEarElf", params[24])
+    instigator:Set("customizationCheekBone", params[25])
+    instigator:Set("customizationCheek", params[26])
+    instigator:Set("customizationChinPortude", params[27])
+    instigator:Set("customizationJawChubby", params[28])
+end
+
+---@param instigator Entity
+---@param params { gestureName: string }
+function Npc:Gesture(instigator, params)
+    local action = ActionSettings.Actions[params.gestureName];
+    if action then
+       self:PlayAnimation(action.name, action.duration)
+       return action.duration
+    else
+        Log.Warn("Npc:Gesture - No action found for gesture " .. params.gestureName)
+        return 0
+    end
+end
+
+---@param instigator Entity
+---@param params any
+function Npc:Wait(instigator, params)
+    return 1
+end
+
+function Npc:RandomWalk()
+    local radius = self:Get("spawnLeashRadius")
+    local pos = self:Get("spawnPosition")
+
+    local randomRadius = math.random() * radius
+    local randomPoint = __engine.navigation.GetRandomPointAroundCircle(pos, radius)
+
+    self:Set("moveDest", randomPoint)
+    self:Set("moveSpeed", self:Get("walkSpeed"))
+
+    -- todo: compute a better estimate
+    return (self:GetPosition():Distance(randomPoint) / self:Get("walkSpeed") * 1.5)
 end
 
 Npc:AddBehavior("dovendorexecute", Npc.DoVendorExecute)
+Npc:AddBehavior("Gesture", Npc.Gesture)
+Npc:AddBehavior("Wait", Npc.Wait)
+Npc:AddBehavior("RandomWalk", Npc.RandomWalk)
 
 ---@param other NpcOtherland|Player
 ---@return Affiliation
