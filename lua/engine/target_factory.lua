@@ -84,6 +84,14 @@ local Relationship = require("core.relationship")
 ---@field type "threats"
 ---@field settings ThreatsSettings
 
+--------------------------------------------------------------------------------
+-- Import
+--------------------------------------------------------------------------------
+---@class ImportSettings: BaseSettings
+
+---@class ImportTargetFactory
+---@field type "import"
+---@field settings ImportSettings
 
 --------------------------------------------------------------------------------
 -- Union type: TargetFactoryDef
@@ -106,6 +114,7 @@ local Relationship = require("core.relationship")
 ---@field selectedTarget? Entity
 ---@field positionOverride? Vector
 ---@field rotationOverride? Quaternion
+---@field import? Player|NpcOtherland
 local TargetFactory = {}
 
 ---@param source Player|NpcOtherland
@@ -137,6 +146,11 @@ end
 ---@param rotation? Quaternion
 function TargetFactory:OverrideRotation(rotation)
     self.rotationOverride = rotation
+end
+
+---@param target Player|NpcOtherland
+function TargetFactory:ImportTarget(target)
+    self.import = target
 end
 
 ---@return Entity[]
@@ -317,6 +331,15 @@ end
 ---@return Entity[]
 function TargetFactory:FindTargets_self()
     return { [1] = self.source }
+end
+
+---@return Entity[]
+function TargetFactory:FindTargets_import()
+    if self.import and self:ShouldEffect(self.import) then
+        return { [1] = self.import }
+    else
+        return {}
+    end
 end
 
 return TargetFactory

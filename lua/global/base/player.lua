@@ -5,6 +5,7 @@
 
 --- @module "core.base_quest"
 --- @module "global.base.structure"
+--- @module "engine.interruption"
 
 local Class = require("core.class")
 local Entity = require("core.entity")
@@ -53,6 +54,7 @@ end
 ---@field avatar_id AvatarId
 ---@field quest_log QuestLog
 ---@field activeInteraction? Timer
+---@field enemies { [AvatarId]: Player|NpcOtherland }
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest
 -----@field channelTimer? Timer
@@ -149,7 +151,7 @@ Player.AddBehavior("respawnnow", function (self, _, variant)
 
             Timer:SingleShot(self, 3, function()
                 self:Set("isUnAttackable", true)
-                __engine.combat.Revive(self, self, self:Get("hpMax") / 2)
+                __engine.combat.Revive(self, self, nil, self:Get("hpMax") / 2)
                 self:Respawn(respawnPos, respawnRot)
             end)
         else
@@ -161,7 +163,7 @@ Player.AddBehavior("respawnnow", function (self, _, variant)
 
         Timer:SingleShot(self, 2, function()
             self:Set("isUnAttackable", true)
-            __engine.combat.Revive(self, self, self:Get("hpMax") / 2)
+            __engine.combat.Revive(self, self, nil, self:Get("hpMax") / 2)
             self:Respawn(self:GetPosition(), self:GetRotation())
         end)
 
@@ -185,6 +187,7 @@ end)
 function Player:Init()
     self.cancelChannel = false
     self.quest_log = QuestLog:New(self)
+    self.enemies = {}
 end
 
 Player:On("OnAbilityRequest",     
@@ -283,11 +286,16 @@ Player:On("OnCastInterrupted",
     ---@param target Player|NonClientBase
     ---@param interaction Interaction
     function (self, target, interaction)
-        self:CancelAbility()
+        self:Interrupt("Cancellation", self)
+    end)
 
-        if self.activeInteraction then
-            self.activeInteraction:Stop()
-            self.activeInteraction = nil
+Player:On("OnDamage", 
+    ---@param self Player
+    ---@param source? Player|NpcOtherland
+    ---@param amount EffectAmount
+    function (self, source, amount)
+        if source and source.avatar_id ~= self.avatar_id then
+            self:AnnounceCombat(source)
         end
     end)
 
@@ -595,8 +603,32 @@ function Player:IsAlive()
     end
 end
 
+---@param source Player|NpcOtherland
+function Player:AnnounceCombat(source)
+    if self.enemies[source.avatar_id] == nil then
+        self.enemies[source.avatar_id] = source
+
+        if not self:IsInCombat() then
+            __engine.interrupt.TriggerInterruption("EnterCombat", self, source)
+            self:Set("isInCombat", true)
+        end
+    end
+end
+
+---@param source Player|NpcOtherland
+function Player:DisannounceCombat(source)
+    if self.enemies[source.avatar_id] ~= nil then
+        self.enemies[source.avatar_id] = nil
+    end
+
+    if next(self.enemies) == nil then
+        __engine.interrupt.TriggerInterruption("LeaveCombat", self)
+        self:Set("isInCombat", false)
+    end
+end
+
 function Player:IsInCombat()
-    self:Get("isInCombat")
+    return self:Get("isInCombat")
 end
 
 ---
@@ -614,34 +646,34 @@ function Player:CastAbility(ability, request)
     -- Check if we are still executing an ability and cancel it.
     -- Return if that fails.
     if not self:CancelAbility() then
-        Log:Debug("Player:CastAbility - Cancel ability failed")
+        Log.Debug("Player:CastAbility - Cancel ability failed")
         return false
     end
 
     -- Check player prerequisites.
 
     if ability:Get("requireRunningWhenActivated") and self:GetVelocity():Length() == 0 then
-        Log:Debug("Player:CastAbility - Player is not running")
+        Log.Debug("Player:CastAbility - Player is not running")
         return false
     end
 
     if ability:Get("sourceMustBeAlive") and not self:IsAlive() then
-        Log:Debug("Player:CastAbility - Player is not alive")
+        Log.Debug("Player:CastAbility - Player is not alive")
         return false
     end
 
     if not ability:Get("usableInCombat") and self:IsInCombat() then
-        Log:Debug("Player:CastAbility - Player is in combat")
+        Log.Debug("Player:CastAbility - Player is in combat")
         return false
     end
 
     if not ability:Get("usableOutOfCombat") and not self:IsInCombat() then
-        Log:Debug("Player:CastAbility - Player is out of combat")
+        Log.Debug("Player:CastAbility - Player is out of combat")
         return false
     end
     
     if ability:Get("usableWithClassWeapon") ~= -1 and self:Get("combatStyle") ~= ability:Get("usableWithClassWeapon") then
-        Log:Debug("Player:CastAbility - Player is not using the correct weapon class")
+        Log.Debug("Player:CastAbility - Player is not using the correct weapon class")
         return false
     end
 
@@ -660,7 +692,7 @@ function Player:CastAbility(ability, request)
     --- Check target prerequisites
     if not ability:Get("alwaysExecute") and ability:Get("targetType") == "Target" then
         if not request.target then
-            Log:Debug("Player:CastAbility - No valid target")
+            Log.Debug("Player:CastAbility - No valid target")
             return false
         end
 
@@ -681,29 +713,29 @@ function Player:CastAbility(ability, request)
 
     if #ability:Get("externalCooldownsConsumed") == 0 and ability:Get("isAutoAttack") then
         if not self:ConsumeCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}) then
-            Log:Debug("Player:CastAbility - Cooldown not ready")
+            Log.Debug("Player:CastAbility - Cooldown not ready")
             return false
         end
     else
         if not self:ConsumeCooldown(ability:Get("externalCooldownsConsumed")) then
-            Log:Debug("Player:CastAbility - Cooldown not ready")
+            Log.Debug("Player:CastAbility - Cooldown not ready")
             return false
         end
     end
 
     if #ability:Get("externalCooldownsEmitted") == 0 and ability:Get("isAutoAttack") then
         if not self:EmitCooldown({[1] = "22a4f191-0183-48ec-8b17-4f9c6cb72f47"}, executionTime) then
-            Log:Debug("Player:CastAbility - Cooldown not ready")
+            Log.Debug("Player:CastAbility - Cooldown not ready")
             return false
         end
     else
         if not self:EmitCooldown(ability:Get("externalCooldownsEmitted"), executionTime) then
-            Log:Debug("Player:CastAbility - Cooldown not ready")
+            Log.Debug("Player:CastAbility - Cooldown not ready")
             return false
         end
     end
 
-    Log:Debug("Player:CastAbility - Player is casting ability " .. ability.name)
+    Log.Debug("Player:CastAbility - Player is casting ability " .. ability.name)
 
     local target = request.target
     if target == nil then
@@ -1127,6 +1159,36 @@ end
 ---@param message string
 function Player:SendMessage(type, message)
     __engine.player.SendMessage(self, message, type)
+end
+
+---@param kind InterruptionKind
+---@param source Player|NpcOtherland|nil
+function Player:Interrupt(kind, source)
+    __engine.interrupt.FireInterrupt(kind, self, source)
+end
+
+---@param kind InterruptionKind
+---@param source Player|NpcOtherland|nil
+function Player:OnInterrupt(kind, source)
+    Log.Debug("Player:OnInterrupt - " .. self.name .. " - " .. kind)
+
+    if self.activeInteraction then
+        self.activeInteraction:Stop()
+        self.activeInteraction = nil
+    end
+
+    if self.abilityState and self.abilityState.ability then
+        if kind == "Movement" then
+            if self.abilityState.state == AbilityState.Channeling and not self.abilityState.ability:Get("allowMoveWhileChanneling") then
+                self:CancelAbility()
+            elseif self.abilityState.state == AbilityState.Casting and not self.abilityState.ability:Get("allowMoveWhileCharging") then
+                self:CancelAbility()
+            elseif self.abilityState.state == AbilityState.EndState and not self.abilityState.ability:Get("allowMoveWhileEndState") then
+                self:CancelAbility()
+            end
+        end
+
+    end
 end
 
 return Player

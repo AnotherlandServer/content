@@ -38,6 +38,8 @@ local Player = require("global.base.player")
 ---@field delay? number
 ---@field children? EffectorDefinition   -- sub-effects triggered after damage
 ---@field targetFactory? TargetFactoryDef
+---@field useInstigatorAsSource? boolean
+---@field importEffectChainingDamage? boolean
 
 
 --------------------------------------------------------------------------------
@@ -50,7 +52,10 @@ local Player = require("global.base.player")
 ---@field damageMult? number
 ---@field children? EffectorDefinition
 ---@field targetFactory? TargetFactoryDef
-
+---@field useInstigatorAsSource? boolean
+---@field importEffectChainingDamage? boolean
+---@field fullDamageFormula? boolean
+---@field weaponDPSMod? number
 
 --------------------------------------------------------------------------------
 -- HealPerSecond
@@ -319,6 +324,10 @@ local Player = require("global.base.player")
 ---@field changeStance? ChangeStance
 ---
 
+---@class EffectAmount
+---@field amount number
+---@field type "Normal"|"Critical"
+
 ---@class Effector
 ---@field def EffectorDefinition
 ---@field item? EdnaFunction
@@ -327,6 +336,8 @@ local Player = require("global.base.player")
 ---@field ability? EdnaAbility
 ---@field buff? OaBuff
 ---@field targetRotation? Quaternion
+---@field sourceAmount? EffectAmount
+---@field importedTarget? Player|NpcOtherland
 local Effector = {}
 
 local Effectors = {
@@ -349,7 +360,7 @@ local Effectors = {
             ---@cast target Player|NpcOtherland
             
             local is_unattackable = target:Get("isUnAttackable")
-            if effector.source.class == "player" then
+            if effector.source.class == "player" and target.class == "npcOtherland" then
                 local player = effector.source --[[@as Player]]
                 is_unattackable = target:Get(player, "isUnAttackable")
             end
@@ -364,12 +375,18 @@ local Effectors = {
             local combat_flags
             local delta_hp_id = nil
 
-            if effector.ability then
+            if def.useInstigatorAsSource then
+                hit_type = "Normal"
+                damage = effector.sourceAmount.amount or 0
+            elseif effector.ability then
                 hit_type, damage = effector.ability:CauseDamage(effector.source, target)
             end
 
             if damage > 0 then
-                delta_hp_id = __engine.combat.Damage(target, effector.source, damage)
+                delta_hp_id = __engine.combat.Damage(target, effector.source, nil, {
+                    type = hit_type == "Critical" and "Critical" or "Normal",
+                    amount = damage,
+                })
             end
 
             if hit_type == "Critical" then
@@ -453,7 +470,10 @@ local Effectors = {
                 heal_amount = heal_amount + math.floor(def.addProportionOfSourceBaseHP * (effector.source:Get("hpMax") - effector.source:Get("hpMin")))
             end
 
-            local delta_hp_id = __engine.combat.Heal(target, effector.source, heal_amount)
+            local delta_hp_id = __engine.combat.Heal(target, effector.source, nil, {
+                type = hit_type == "Critical" and "Critical" or "Normal",
+                amount = heal_amount,
+            })
 
             effects[#effects + 1] = {
                 target = target,
@@ -481,13 +501,10 @@ local Effectors = {
         local targets = effector:CreateTargetFactory(def.targetFactory):FindTargets()
 
         for _, target in ipairs(targets) do
-            --- Todo: Add buffs to NPCs
-            if target.GetClass() == Player then
-                ---@cast target Player
-                
-                if not target:HasBuff("Name", def.buffName) then
-                    target:AddBuffByName(def.buffName, effector.source, def.buffDuration, def.delay, def.initialStackCount)
-                end
+            ---@cast target Player|NpcOtherland
+
+            if not target:HasBuff("Name", def.buffName) then
+                target:AddBuffByName(def.buffName, effector.source, def.buffDuration, def.delay, def.initialStackCount)
             end
         end
 
@@ -511,6 +528,16 @@ function Effector:New(source, def)
     return instance
 end
 
+---@param amount EffectAmount
+function Effector:SetSourceAmount(amount)
+    self.sourceAmount = amount
+end
+
+---@param target Player|NpcOtherland
+function Effector:ImportTarget(target)
+    self.importedTarget = target
+end
+
 ---@param def? TargetFactoryDef
 ---@return TargetFactory
 function Effector:CreateTargetFactory(def)
@@ -523,7 +550,9 @@ function Effector:CreateTargetFactory(def)
             if targetType == "Self" then
                 factoryDef = {
                     type = "self",
-                    settings = {}
+                    settings = {
+                        affectSelf = true,
+                    }
                 }
             elseif targetType == "Enemy" then
                 factoryDef = {
@@ -536,18 +565,21 @@ function Effector:CreateTargetFactory(def)
                 Log.Err("Effector:CreateTargetFactory - TargetType not found: " .. targetType)
                 factoryDef = {
                     type = "none",
-                    settings = {}
+                    settings = {
+                        affectFriends = true,
+                        affectEnemies = true,
+                        affectNeutral = true,
+                    }
                 }
             end
-        elseif self.buff then
-            factoryDef = {
-                type = "self",
-                settings = {}
-            }
         else
             factoryDef = {
                 type = "none",
-                settings = {}
+                settings = {
+                    affectFriends = true,
+                    affectEnemies = true,
+                    affectNeutral = true,
+                }
             }
         end
     end
@@ -555,6 +587,10 @@ function Effector:CreateTargetFactory(def)
     local targetfactory = TargetFactory.New(self.source, factoryDef)
     targetfactory:SetSelectedTarget(self.target)
     targetfactory:OverrideRotation(self.targetRotation)
+
+    if self.importedTarget then
+        targetfactory:ImportTarget(self.importedTarget)
+    end
 
     return targetfactory
 end

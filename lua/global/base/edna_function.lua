@@ -37,7 +37,7 @@ function EdnaFunction:RollDamage(target)
 
     local damage = math.random(minDamage, maxDamage)
 
-    return 0, damage
+    return "Normal", damage
 end
 
 ---@param target Player|NpcOtherland
@@ -49,7 +49,7 @@ function EdnaFunction:RollHeal(target)
 
     local heal = math.random(minHeal, maxHeal)
 
-    return 0, heal
+    return "Normal", heal
 end
 
 return EdnaFunction

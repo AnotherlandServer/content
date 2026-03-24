@@ -5,6 +5,7 @@
 
 ---@module "core.base_quest"
 ---@module "engine.behavior_config"
+---@module "engine.effector"
 
 local Class = require("core.class")
 local Timer = require("core.timer")
@@ -136,6 +137,11 @@ function Npc:UpdateThreatList(dt)
             (v.entity:GetPosition():Distance(self:GetPosition()) > evadeRange) or
             v.entity:Get("isUnAttackable")
         then
+            if v.entity.class == "player" and v.entity:IsValid() then
+                local ent = v.entity ---@cast ent Player
+                ent:DisannounceCombat(self)
+            end
+
             --Log.Debug("Npc:UpdateThreatList - Removing " .. v.entity.name .. " from threat list of " .. self.name)
             self.threatList[k] = nil
         else
@@ -588,20 +594,21 @@ Npc:On("InterestRemoved",
 
 Npc:On("OnDamage",
     ---@param self NpcOtherland
-    ---@param damage number
     ---@param source Player|NpcOtherland
-    function(self, damage, source)
-        --Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage .. " damage from " .. source.name)
+    ---@param damage EffectAmount
+    function(self, source, damage)
+        Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage.amount .. " damage from " .. source.name)
+
         if self:Get("alive") then
             if not self.threatList[source.avatar_id] then
                 self.threatList[source.avatar_id] = {
                     entity = source,
                     distance = 0,
-                    damage = damage,
+                    damage = damage.amount,
                     bonus = 0,
                 }
             else
-                self.threatList[source.avatar_id].damage = self.threatList[source.avatar_id].damage + damage
+                self.threatList[source.avatar_id].damage = self.threatList[source.avatar_id].damage + damage.amount
             end
         else
             if source and source.class == "player" then 
@@ -615,6 +622,19 @@ Npc:On("OnDamage",
             end
 
             self.threatList = {}
+        end
+    end)
+
+Npc:On("OnDeath",
+    ---@param self NpcOtherland
+    ---@param source Player|NpcOtherland
+    function(self, source)
+        -- Notify players of death
+        for _, v in pairs(self.threatList) do
+            if v.entity and v.entity.class == "player" then
+                local ent = v.entity ---@cast ent Player
+                ent:DisannounceCombat(self)
+            end
         end
     end)
 
@@ -903,6 +923,71 @@ end
 
 function Npc:IsAlive()
     return self:Get("alive")
+end
+
+---@param kind InterruptionKind
+---@param source Player|NpcOtherland|nil
+function Npc:Interrupt(kind, source)
+    __engine.interrupt.FireInterrupt(kind, self, source)
+end
+
+---@param kind InterruptionKind
+---@param source Player|NpcOtherland|nil
+function Npc:OnInterrupt(kind, source)
+end
+
+---@param buff_id string|ContentRef
+---@param instigator? Player|NpcOtherland
+---@param duration? number
+---@param delay? number
+---@param stacks? integer
+---@return string
+function Npc:AddBuff(buff_id, instigator, duration, delay, stacks)
+    if instigator == nil then
+        instigator = self
+    end
+
+    if type(buff_id) == "table" then
+        return __engine.buffs.AddBuff(self, instigator, buff_id.id, duration, delay, stacks)
+    else
+        return __engine.buffs.AddBuff(self, instigator, buff_id, duration, delay, stacks)
+    end
+end
+
+---@param buff_name string
+---@param instigator? Player|NpcOtherland
+---@param duration? number
+---@param delay? number
+---@param stacks? integer
+---@return string
+function Npc:AddBuffByName(buff_name, instigator, duration, delay, stacks)
+    if instigator == nil then
+        instigator = self
+    end
+
+    return __engine.buffs.AddBuffByName(self, instigator, buff_name, duration, delay, stacks)
+end
+
+---@param reference_type BuffReference
+---@param buff_id string|ContentRef
+---@return boolean
+function Npc:RemoveBuff(reference_type, buff_id)
+    if type(buff_id) == "table" then
+        return __engine.buffs.RemoveBuff(self, reference_type, buff_id.id)
+    else
+        return __engine.buffs.RemoveBuff(self, reference_type, buff_id)
+    end
+end
+
+---@param reference_type BuffReference
+---@param buff_id string|ContentRef
+---@return boolean
+function Npc:HasBuff(reference_type, buff_id)
+    if type(buff_id) == "table" then
+        return __engine.buffs.HasBuff(self, reference_type, buff_id.id)
+    else
+        return __engine.buffs.HasBuff(self, reference_type, buff_id)
+    end
 end
 
 return Npc
