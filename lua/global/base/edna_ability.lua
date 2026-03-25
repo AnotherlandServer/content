@@ -8,8 +8,8 @@ local TargetFactory = require("engine.target_factory")
 local Effector = require("engine.effector")
 local HitTable = require("engine.hit_table")
 
----@class EdnaAbility: Skill
-local EdnaAbility = Class(require("core.skill"))
+---@class EdnaAbility: Entity
+local EdnaAbility = Class(require("core.entity"))
 
 ---@param source Player|NpcOtherland
 ---@return TargetFactory

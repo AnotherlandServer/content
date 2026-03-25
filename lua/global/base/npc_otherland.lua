@@ -474,22 +474,7 @@ function Npc:Init()
         }
     end
 
-    local abilityCount = __engine.ability.GetNpcAbilityCount(self)
-
-    for i = 1, abilityCount do
-        local ability = {
-            __npc = self,
-            __npc_ability_idx = i - 1,
-        }
-        setmetatable(ability, NpcAbilityMetatable)
-
-        local info = __engine.ability.GetNpcAbilityInfo(self, i - 1)
-        for k, v in pairs(info) do
-            ability[k] = v
-        end
-
-        self.abilities[i] = ability
-    end
+    self.abilities = __engine.ability.GetAbilities(self)
 
     NonClientBase.Init(self)
 
@@ -597,8 +582,6 @@ Npc:On("OnDamage",
     ---@param source Player|NpcOtherland
     ---@param damage EffectAmount
     function(self, source, damage)
-        Log.Debug("Npc:OnDamage - " .. self.name .. " took " .. damage.amount .. " damage from " .. source.name)
-
         if self:Get("alive") then
             if not self.threatList[source.avatar_id] then
                 self.threatList[source.avatar_id] = {

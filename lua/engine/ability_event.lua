@@ -45,8 +45,8 @@ local EventType = {
 ---@class AbilityEvent
 ---@field ability? EdnaAbility
 ---@field buff? OaBuff
----@field source Entity
----@field target? Entity
+---@field source Player|NpcOtherland
+---@field target? Player|NpcOtherland
 ---@field effect_source? EdnaFunction|EdnaAbility|OaBuff
 ---@field effects Effect[]
 ---@field prediction_id integer
@@ -57,7 +57,7 @@ local EventType = {
 ---@field event_type integer
 local AbilityEvent = {}
 
----@param source Entity
+---@param source Player|NpcOtherland
 ---@param event_type EventType
 ---@return AbilityEvent
 function AbilityEvent.New(source, event_type)
@@ -113,7 +113,7 @@ function AbilityEvent:SetEffectSource(source)
     self.effect_source = source
 end
 
----@param target? Entity
+---@param target? Player|NpcOtherland
 function AbilityEvent:SetTarget(target)
     self.target = target
 end
