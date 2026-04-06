@@ -9,7 +9,34 @@ local Effector = require("engine.effector")
 local HitTable = require("engine.hit_table")
 
 ---@class EdnaAbility: Entity
+---@field placement_guid string
+---@field template_guid string
+---@field template_numeric_id number
 local EdnaAbility = Class(require("core.entity"))
+
+---@param source Player|NpcOtherland
+---@param item? EdnaFunction
+---@return boolean
+function EdnaAbility:ConsumeResources(source, item)
+    local skillGroup = self:Get("SkillGroup") --[[@as ContentRef]]
+
+    local externalCooldownsConsumed = self:Get("externalCooldownsConsumed") --[[@as ContentRef[] ]]
+    local internalCooldown = skillGroup or self.template_numeric_id
+    local cooldowns = {internalCooldown}
+
+    for _, cooldown in ipairs(externalCooldownsConsumed) do
+        table.insert(cooldowns, cooldown)
+    end
+
+    if source:ConsumeCooldowns(cooldowns) then
+        source:EmitCooldown({internalCooldown}, self:Get("internalCooldown"))
+        source:EmitCooldown(externalCooldownsConsumed, item and item:Get("weaponDelay") or self:Get("executionTime"))
+
+        return true
+    else
+        return false
+    end
+end
 
 ---@param source Player|NpcOtherland
 ---@return TargetFactory
@@ -30,7 +57,8 @@ function EdnaAbility:Use(source, invocation, request)
         effector:SetAbility(self)
         effector:SetItem(request.item)
         effector:SetTarget(request.target)
-        
+        --effector:SetBaseDelay(request.item and request.item:Get("weaponDelay") or 0)
+
         effector:SetTargetRotation(request.target_rotation)
 
         local effects = effector:Apply()
@@ -83,8 +111,8 @@ function EdnaAbility:CauseDamage(attacker, defender)
         * attacker:Get("statFinalDamageMod")
     local hit_type = hit_table:Roll()
 
-    -- Log.Debug("EdnaAbility:CauseDamage - Hit type: " .. hit_type)
-    -- Log.Debug("EdnaAbility:CauseDamage - Damage before reduction: " .. damage)
+    --Log.Debug("EdnaAbility:CauseDamage - Hit type: " .. hit_type)
+    --Log.Debug("EdnaAbility:CauseDamage - Damage before reduction: " .. damage)
 
     if hit_type == "Miss" then
         damage = 0
@@ -100,15 +128,15 @@ function EdnaAbility:CauseDamage(attacker, defender)
 
     damage = damage - defender:Get("statAnyDmgReduction")
 
-    -- Log.Debug("EdnaAbility:CauseDamage - Damage any reduction: " .. defender:Get("statAnyDmgReduction"))
+    --Log.Debug("EdnaAbility:CauseDamage - Damage any reduction: " .. defender:Get("statAnyDmgReduction"))
 
     local armor_reduction = defender:Get("statArmorReduction") - attacker:GetPeneBonus()
 
-    -- Log.Debug("EdnaAbility:CauseDamage - Armor reduction: " .. armor_reduction)
+    --Log.Debug("EdnaAbility:CauseDamage - Armor reduction: " .. armor_reduction)
 
     damage = damage - armor_reduction
 
-    -- Log.Debug("EdnaAbility:CauseDamage - Damage after reduction: " .. damage)
+    --Log.Debug("EdnaAbility:CauseDamage - Damage after reduction: " .. damage)
 
 
     return hit_type, math.max(math.floor(damage), 0)

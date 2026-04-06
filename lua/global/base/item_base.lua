@@ -6,6 +6,8 @@
 local Class = require("core.class")
 
 ---@class ItemBase: Entity
+---@field placement_guid string
+---@field template_guid string
 local ItemBase = Class(require("core.entity"))
 
 return ItemBase

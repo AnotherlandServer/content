@@ -13,7 +13,6 @@ function ClassSelection_P:SpawnPlayer(player)
     player:Set("tutorialMode", true)
     player:Set("firstTimeSpawn", true)
 
-    player:RecalculateStats()
     player:Spawn()
 end
 

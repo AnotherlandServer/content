@@ -23,13 +23,26 @@ function OaBuff:Init()
     self.triggerState = {}
     
     local triggers = self:Get("eventTriggeredEffectors")
-    if triggers then
+    if type(triggers) == "table" then
         for event, attribs in pairs(triggers) do
             self.triggers[event] = attribs
             self.triggerState[event] = { triggered = false, gated = false, timer = nil }
         end
     end
 end
+
+OaBuff:On("OnPreDamage",
+    ---@param self OaBuff
+    ---@param event AbilityEvent
+    ---@param effect Effect
+    function (self, event, effect)
+        if 
+            event.source == self.instigator and 
+            self:CanTriggerEffector("damageByInstigator") 
+        then
+            self:TriggerEffector("damageByInstigator", self.instigator, event, effect)
+        end
+    end)
 
 function OaBuff:Tick()
     local settings = self:Get("effectorSettings")
@@ -49,32 +62,31 @@ function OaBuff:Tick()
     end
 end
 
----@param source Player|NpcOtherland
+---@param instigator? Player|NpcOtherland
+---@param source? EffectSource
 ---@param damage EffectAmount
-function OaBuff:OnOwnerDamaged(source, damage)
-    if self.instigator == source and self:CanTriggerEffector("damageByInstigator") then
-        self:TriggerEffector("damageByInstigator", source, damage)
-    end
+function OaBuff:OnOwnerDamaged(instigator, source, damage)
 end
 
----@param source Player|NpcOtherland
+---@param instigator? Player|NpcOtherland
+---@param source? EffectSource
 ---@param heal EffectAmount
-function OaBuff:OnOwnerHealed(source, heal)
+function OaBuff:OnOwnerHealed(instigator, source, heal)
 end
 
----@param source Player|NpcOtherland
-function OaBuff:OnOwnerDeath(source)
-    if self:Get("destroyOnOwnerDied") then 
-        self:Expire()
-    end 
+---@param instigator? Player|NpcOtherland
+---@param source? EffectSource
+function OaBuff:OnOwnerDeath(instigator, source)
 end
 
----@param source Player|NpcOtherland
-function OaBuff:OnOwnerRevive(source)
+---@param instigator? Player|NpcOtherland
+---@param source? EffectSource
+function OaBuff:OnOwnerRevive(instigator, source)
 end
 
----@param source Player|NpcOtherland
-function OaBuff:OnInstigatorDeath(source)
+---@param instigator? Player|NpcOtherland
+---@param source? EffectSource
+function OaBuff:OnInstigatorDeath(instigator, source)
 end
 
 function OaBuff:Expire()
@@ -99,10 +111,13 @@ end
 
 ---@param effectorName string
 ---@param instigator Player|NpcOtherland
----@param amount EffectAmount
-function OaBuff:TriggerEffector(effectorName, instigator, amount)
+---@param event AbilityEvent
+---@param effect Effect
+function OaBuff:TriggerEffector(effectorName, instigator, event, effect)
     local trigger = self.triggers[effectorName]
     local state = self.triggerState[effectorName]
+
+    Log.Debug("OaBuff:TriggerEffector - Attempting to trigger effector '" .. effectorName .. "'")
 
     state.triggered = true
     
@@ -119,10 +134,10 @@ function OaBuff:TriggerEffector(effectorName, instigator, amount)
         end)
     end
 
-    
     local effector = Effector:New(instigator, trigger.effects)
     effector:SetBuff(self)
-    effector:SetSourceAmount(amount)
+    effector:SetExternalEvent(event)
+    effector:SetExternalEffect(effect)
     effector:SetTarget(self.target)
 
     if trigger.settings.exportDamageSourceAsTarget then
@@ -130,14 +145,18 @@ function OaBuff:TriggerEffector(effectorName, instigator, amount)
     end
     
     local effects = effector:Apply()
-    
-    Log.Debug("OaBuff:TriggerEffector - Triggered effector '" .. effectorName .. "' with " .. #effects .. " effects")
 
-    local event = AbilityEvent.New(instigator, "Use")
-    event:SetBuff(self)
-    event:SetEffectSource(self)
-    event:AddEffects(effects)
-    event:Fire()
+    if #effects > 0 then
+        Log.Debug("OaBuff:TriggerEffector - Triggered effector '" .. effectorName .. "' with " .. #effects .. " effects")
+
+        local event = AbilityEvent.New(self.instigator, "Use")
+        event:SetBuff(self)
+        event:SetEffectSource(self)
+        event:AddEffects(effects)
+
+        event:SetDebug(true)
+        event:Fire()
+    end
 end
 
 return OaBuff

@@ -31,13 +31,13 @@ function AvatarFilter.FindByInstanceId(instanceId)
     }, { __index = AvatarFilter })
 end
 
----@param tags string[]
+---@param tag integer
 ---@return AvatarFilter
-function AvatarFilter.FindByQuestTags(tags)
+function AvatarFilter.FindByQuestTag(tag)
     return setmetatable({
-        type = "QuestTags",
-        filter = table.concat(tags, "|"),
-        fnc = TestQuestTags
+        type = "QuestTag",
+        filter = tostring(tag),
+        fnc = TestQuestTag
     }, { __index = AvatarFilter })
 end
 
@@ -84,7 +84,7 @@ end
 ---@param ent Player|NonClientBase
 ---@param filter string
 ---@return boolean
-function TestQuestTags(ent, filter)
+function TestQuestTag(ent, filter)
     return false
 end
 

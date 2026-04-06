@@ -8,6 +8,7 @@
 local AbilityEvent = require("engine.ability_event")
 local TargetFactory = require("engine.target_factory")
 local Player = require("global.base.player")
+local Timer = require("core.timer")
 
 --------------------------------------------------------------------------------
 -- Buff
@@ -56,6 +57,7 @@ local Player = require("global.base.player")
 ---@field importEffectChainingDamage? boolean
 ---@field fullDamageFormula? boolean
 ---@field weaponDPSMod? number
+---@field delay? number
 
 --------------------------------------------------------------------------------
 -- HealPerSecond
@@ -328,6 +330,10 @@ local Player = require("global.base.player")
 ---@field amount number
 ---@field type "Normal"|"Critical"
 
+---@class EffectSource
+---@field type "Ability"|"Buff"|"Item"
+---@field entity EdnaAbility|OaBuff|EdnaFunction
+
 ---@class Effector
 ---@field def EffectorDefinition
 ---@field item? EdnaFunction
@@ -336,8 +342,10 @@ local Player = require("global.base.player")
 ---@field ability? EdnaAbility
 ---@field buff? OaBuff
 ---@field targetRotation? Quaternion
----@field sourceAmount? EffectAmount
+---@field externalEvent? AbilityEvent
+---@field externalEffect? Effect
 ---@field importedTarget? Player|NpcOtherland
+---@field baseDelay? number
 local Effector = {}
 
 local Effectors = {
@@ -373,21 +381,21 @@ local Effectors = {
 
             local hit_type, damage 
             local combat_flags
-            local delta_hp_id = nil
 
             if def.useInstigatorAsSource then
-                hit_type = "Normal"
-                damage = effector.sourceAmount.amount or 0
+                effector.externalEffect.amount = effector.externalEffect.amount + effector.externalEffect.amount
+                return {}
             elseif effector.ability then
                 hit_type, damage = effector.ability:CauseDamage(effector.source, target)
             end
 
-            if damage > 0 then
-                delta_hp_id = __engine.combat.Damage(target, effector.source, nil, {
-                    type = hit_type == "Critical" and "Critical" or "Normal",
-                    amount = damage,
-                })
-            end
+            local delta_hp_id = FireDamageEvent(target, effector.source, effector.item or effector.buff or effector.ability, {
+                type = hit_type == "Critical" and "Critical" or "Normal",
+                amount = damage,
+            },
+            (def.delay or 0) + (effector.baseDelay or 0))
+
+            --Log.Debug("Effector:damage - Target: " .. target.name .. ", Damage: " .. damage .. ", HitType: " .. hit_type)
 
             if hit_type == "Critical" then
                 combat_flags = AbilityEvent.CombatFlags.Critical
@@ -470,10 +478,11 @@ local Effectors = {
                 heal_amount = heal_amount + math.floor(def.addProportionOfSourceBaseHP * (effector.source:Get("hpMax") - effector.source:Get("hpMin")))
             end
 
-            local delta_hp_id = __engine.combat.Heal(target, effector.source, nil, {
+            local delta_hp_id = FireHealEvent(target, effector.source, effector.item or effector.buff or effector.ability, {
                 type = hit_type == "Critical" and "Critical" or "Normal",
                 amount = heal_amount,
-            })
+            },
+            (def.delay or 0) + (effector.baseDelay or 0))
 
             effects[#effects + 1] = {
                 target = target,
@@ -510,6 +519,21 @@ local Effectors = {
 
         return effects
     end,
+
+    ---@param effector Effector
+    ---@param def ChangeStance
+    ---@return Effect[]
+    changeStance = function (effector, def)
+        if effector.source.class ~= "player" then
+            Log.Err("Effector:changeStance - Source is not a player")
+            return {}
+        end
+
+        local player = effector.source --[[@as Player]]
+        player:ChangeStance(def.stanceIndex, def.stanceRank)
+
+        return {}
+    end,
 }
 
 ---@param source Player|NpcOtherland
@@ -528,9 +552,14 @@ function Effector:New(source, def)
     return instance
 end
 
----@param amount EffectAmount
-function Effector:SetSourceAmount(amount)
-    self.sourceAmount = amount
+---@param event AbilityEvent
+function Effector:SetExternalEvent(event)
+    self.externalEvent = event
+end
+
+---@param effect? Effect
+function Effector:SetExternalEffect(effect)
+    self.externalEffect = effect
 end
 
 ---@param target Player|NpcOtherland
@@ -620,6 +649,11 @@ function Effector:SetTargetRotation(rotation)
     self.targetRotation = rotation
 end
 
+---@param delay? number
+function Effector:SetBaseDelay(delay)
+    self.baseDelay = delay
+end
+
 ---@return Effect[]
 function Effector:Apply()
     local effects = {}
@@ -637,6 +671,66 @@ function Effector:Apply()
     end
 
     return effects
+end
+
+---@param target Player|NpcOtherland
+---@param instigator Player|NpcOtherland
+---@param source? EdnaFunction|EdnaAbility|OaBuff
+---@param amount EffectAmount
+---@param delay? number
+---@return integer delta_hp_id
+function FireDamageEvent(target, instigator, source, amount, delay)
+    local id = __engine.combat.GenerateId()
+
+    if delay then
+        Timer:SingleShot(target, delay, function()
+            __engine.combat.FireDamageEvent(target, id, instigator, source, amount)
+        end)
+    else
+        __engine.combat.FireDamageEvent(target, id, instigator, source, amount)
+    end
+
+    return id
+end
+
+---@param target Player|NpcOtherland
+---@param instigator Player|NpcOtherland
+---@param source? EdnaFunction|EdnaAbility|OaBuff
+---@param amount EffectAmount
+---@param delay? number
+---@return integer delta_hp_id
+function FireHealEvent(target, instigator, source, amount, delay)
+    local id = __engine.combat.GenerateId()
+
+    if delay then
+        Timer:SingleShot(target, delay, function()
+            __engine.combat.FireHealEvent(target, id, instigator, source, amount)
+        end)
+    else
+        __engine.combat.FireHealEvent(target, id, instigator, source, amount)
+    end
+
+    return id
+end
+
+---@param target Player|NpcOtherland
+---@param instigator Player|NpcOtherland
+---@param source? EdnaFunction|EdnaAbility|OaBuff
+---@param amount EffectAmount
+---@param delay? number
+---@return integer delta_hp_id
+function FireReviveEvent(target, instigator, source, amount, delay)
+    local id = __engine.combat.GenerateId()
+
+    if delay then
+        Timer:SingleShot(target, delay, function()
+            __engine.combat.FireReviveEvent(target, id, instigator, source, amount)
+        end)
+    else
+        __engine.combat.FireReviveEvent(target, id, instigator, source, amount)
+    end
+
+    return id
 end
 
 return Effector

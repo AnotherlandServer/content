@@ -73,4 +73,7 @@ function Entity:HotReload()
     self:Attach()
 end
 
+function Entity:Detach()
+end
+
 return Entity

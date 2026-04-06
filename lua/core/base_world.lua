@@ -61,8 +61,6 @@ function BaseWorld:SpawnPlayer(player)
         player:Set("firstTimeSpawn", false)
     end
 
-    player:RecalculateStats()
-
     if player:Get("firstTimeSpawn") then
         player:Set("hpCur", player:Get("hpMax"))
     end

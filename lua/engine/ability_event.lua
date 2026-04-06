@@ -55,6 +55,7 @@ local EventType = {
 ---@field position Vector
 ---@field event_duration number
 ---@field event_type integer
+---@field debug boolean
 local AbilityEvent = {}
 
 ---@param source Player|NpcOtherland
@@ -74,6 +75,7 @@ function AbilityEvent.New(source, event_type)
     obj.combo_stage_id = 0
     obj.event_duration = 0
     obj.position = __engine.movement.GetPosition(source)
+    obj.debug = false
 
     return obj
 end
@@ -118,6 +120,11 @@ function AbilityEvent:SetTarget(target)
     self.target = target
 end
 
+---@param debug boolean
+function AbilityEvent:SetDebug(debug)
+    self.debug = debug
+end
+
 ---@param effects Effect[]
 function AbilityEvent:AddEffects(effects)
     for _, effect in ipairs(effects) do
@@ -131,6 +138,14 @@ function AbilityEvent:AddEffect(effect)
 end
 
 function AbilityEvent:Fire()
+    for _, effect in ipairs(self.effects) do
+        if effect.type == EffectType.Damage then
+            effect.target:Emit("OnPreDamage", self, effect)
+        elseif effect.type == EffectType.Healing then
+            effect.target:Emit("OnPreHeal", self, effect)
+        end
+    end
+
     __engine.ability.FireEvent(self)
 end
 

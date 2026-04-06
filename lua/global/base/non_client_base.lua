@@ -110,4 +110,10 @@ function NonClientBase:DropItem(player, party, item, count)
     __engine.inventory.DropItem(self, player, party, item, count)
 end
 
+---@param player Player
+---@return boolean
+function NonClientBase:IsQuestRelevant(player)
+    
+end
+
 return NonClientBase
