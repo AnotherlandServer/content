@@ -1160,16 +1160,7 @@ end
 
 ---@return number
 function Npc:GetBaseDamage()
-    local main, off = self:GetWeapon()
-    if main == nil then
-        return 0
-    end
-
-    local attributes = main:GetAttributes()
-    
-    return 
-        attributes[self:GetPrimaryStat()] * 0.5 +
-        attributes[self:GetSecondaryStat()] * 0.5
+    return 0
 end
 
 ---@return number, number
