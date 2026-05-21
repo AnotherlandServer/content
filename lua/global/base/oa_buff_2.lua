@@ -8,6 +8,9 @@ local Entity = require("core.entity")
 local Effector = require("engine.effector")
 local AbilityEvent = require("engine.ability_event")
 local Timer = require("core.timer")
+local AttributesContainer = require("engine.attributes")
+
+---@alias CCEffect "sleep"
 
 ---@class OaBuff: Entity
 ---@field placement_guid string
@@ -16,6 +19,7 @@ local Timer = require("core.timer")
 ---@field target Player|NpcOtherland
 ---@field triggers { [string]: table }
 ---@field triggerState { [string]: { triggered: boolean, gated: boolean, timer: Timer? } }
+---@field attributes AttributesContainer
 local OaBuff = Class(Entity)
 
 function OaBuff:Init()
@@ -28,6 +32,22 @@ function OaBuff:Init()
             self.triggers[event] = attribs
             self.triggerState[event] = { triggered = false, gated = false, timer = nil }
         end
+    end
+
+    self.attributes = AttributesContainer:New()
+    
+    for i = 1, 4 do
+        local name = self:Get("attributeType" .. i)
+        local value = self:Get("attributeValue" .. i)
+
+        if name ~= "" then
+            self.attributes[name] = value
+        end
+    end
+
+    local ccEffects = self:Get("AddCCEffectToOwner")
+    if #ccEffects ~= 0 then
+        self.target:Interrupt("Cancellation", self.instigator)
     end
 end
 

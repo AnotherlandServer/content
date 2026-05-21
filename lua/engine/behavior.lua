@@ -3,6 +3,8 @@
 -- This software is licensed under the MIT License.
 -- For details, see the LICENSE.md file in the repository.
 
+local Dump = require("core.dump")
+
 ---@class Behavior
 ---@field tag string
 ---@field value any
@@ -57,7 +59,16 @@ end
 function Behavior.Invert(behavior)
     return NewBehavior({
         tag = "Invert",
-        value = behavior,
+        condition = behavior,
+    })
+end
+
+---@param behavior Behavior
+---@return Behavior
+function Behavior.AlwaysSucceed(behavior)
+    return NewBehavior({
+        tag = "AlwaysSucceed",
+        condition = behavior,
     })
 end
 
@@ -66,7 +77,7 @@ end
 function Behavior.Select(behaviors)
     return NewBehavior({
         tag = "Select",
-        value = behaviors,
+        children = behaviors,
     })
 end
 
@@ -155,6 +166,7 @@ function Behavior:Compile(npc)
     if self.tag == "Builder" then
         return self.builder(npc)
     else
+
         local compiled = {}
         compiled.tag = self.tag
         compiled.value = self.value

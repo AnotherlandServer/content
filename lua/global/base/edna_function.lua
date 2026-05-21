@@ -4,13 +4,24 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
+local ItemEdna = require("global.base.item_edna")
+
+local RarityDpsMod = {
+    [0] = 0.0,
+    [1] = 0.5,
+    [2] = 0.55,
+    [3] = 0.6,
+    [4] = 0.64999998,
+    [5] = 0.69999999,
+    [6] = 0.75,
+}
 
 ---@class EdnaFunction: ItemEdna
 ---@field NormalAttack EdnaAbility
 ---@field HeavyAttack? EdnaAbility
 ---@field SpecialAttack? EdnaAbility
 ---@field owner Player
-local EdnaFunction = Class(require("global.base.item_edna"))
+local EdnaFunction = Class(ItemEdna)
 
 ---@enum WeaponType
 EdnaFunction.WeaponType = {
@@ -75,6 +86,8 @@ local WeaponCombatStyle = {
 }
 
 function EdnaFunction:Init()
+    ItemEdna.Init(self)
+
     Log.Debug("EdnaFunction:Init - Initializing EdnaFunction for " .. self.name)
 
     for _,v in ipairs(self:GetAbilities()) do
@@ -88,6 +101,11 @@ function EdnaFunction:Init()
             self.SpecialAttack = v
         end 
     end
+
+    local level = self:Get("level")
+    local rarity = self:Get("rarity")
+
+    self.attributes.WeaponDPS = self:Get("level")
 end
 
 ---@param target Player|NpcOtherland

@@ -382,11 +382,16 @@ local Effectors = {
             local hit_type, damage 
             local combat_flags
 
-            if def.useInstigatorAsSource then
-                effector.externalEffect.amount = effector.externalEffect.amount + effector.externalEffect.amount
-                return {}
-            elseif effector.ability then
-                hit_type, damage = effector.ability:CauseDamage(effector.source, target)
+            if target.isEvading then 
+                hit_type = "Evade"
+                damage = 0
+            else
+                if def.useInstigatorAsSource then
+                    effector.externalEffect.amount = effector.externalEffect.amount + effector.externalEffect.amount
+                    return {}
+                elseif effector.ability then
+                    hit_type, damage = effector.ability:CauseDamage(effector.source, target)
+                end
             end
 
             local delta_hp_id = FireDamageEvent(target, effector.source, effector.item or effector.buff or effector.ability, {

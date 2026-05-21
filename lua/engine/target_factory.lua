@@ -168,7 +168,17 @@ function TargetFactory:FindTargets()
         table.insert(targets, self.source)
     end
 
-    return targets
+    local res = {}
+    local hash = {}
+
+    for _,v in ipairs(targets) do
+        if not hash[v] then
+            res[#res + 1] = v
+            hash[v] = true
+        end
+    end
+
+    return res
 end
 
 ---@param target NpcOtherland|Player

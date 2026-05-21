@@ -4,6 +4,8 @@
 -- For details, see the LICENSE.md file in the repository.
 
 local Class = require("core.class")
+local ItemBase = require("global.base.item_base")
+local AttributesContainer = require("engine.attributes")
 
 ---@class ItemAttributes
 ---@field AttackPower number
@@ -20,7 +22,21 @@ local Class = require("core.class")
 ---@field Stamina number
 
 ---@class ItemEdna: ItemBase
-local ItemEdna = Class(require("global.base.item_base"))
+---@field attributes AttributesContainer
+local ItemEdna = Class(ItemBase)
+
+function ItemEdna:Init()
+    self.attributes = AttributesContainer:New()
+    
+    for i = 1, 6 do
+        local name = self:Get("autoAttributeType" .. i)
+        local value = self:Get("autoAttributeValue" .. i)
+
+        if name ~= "" then
+            self.attributes[name] = value
+        end
+    end
+end
 
 ---@return EdnaAbility[]
 function ItemEdna:GetAbilities()

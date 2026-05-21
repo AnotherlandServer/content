@@ -5,6 +5,7 @@
 
 --- @module "core.base_quest"
 --- @module "global.base.structure"
+--- @module "global.base.oa_buff_2"
 --- @module "engine.interruption"
 
 local Class = require("core.class")
@@ -16,6 +17,9 @@ local QuestLog = require("engine.quest_log")
 local GetWorld = require("engine.world")
 local Interaction = require("engine.interaction")
 local AvatarFilter = require("engine.avatar_filter")
+local Coefficients = require("settings.coefficients")
+local AttributesContainer = require("engine.attributes")
+local dump = require("core.dump")
 
 ---@enum AbilityState
 local AbilityState = {
@@ -50,11 +54,13 @@ end
 
 ---@class Player: Entity
 ---@field abilityState? AbilityStateStore
+---@field attributes AttributesContainer
 ---@field abilityRetrigger? Timer
 ---@field avatar_id AvatarId
 ---@field quest_log QuestLog
 ---@field activeInteraction? Timer
 ---@field enemies { [AvatarId]: Player|NpcOtherland }
+---@field ccEffects { CCEffect: boolean }
 -----@field channelAbility? EdnaAbility
 -----@field channelRequest? AbilityRequest
 -----@field channelTimer? Timer
@@ -199,6 +205,9 @@ end)
 function Player:Init()
     self.quest_log = QuestLog:New(self)
     self.enemies = {}
+    self.attributes = AttributesContainer:New()
+    self.ccEffects = {}
+
     self:Set("isInCombat", false)
 end
 
@@ -308,6 +317,7 @@ Player:On("OnDamage",
     function (self, source, amount)
         if source and source.avatar_id ~= self.avatar_id then
             self:AnnounceCombat(source)
+            self:Set("attackedBy", source.avatar_id)
         end
     end)
 
@@ -316,113 +326,96 @@ Player:On("RecalculateAttributes",
     function (self)
         Log.Debug("Recalculating attributes for player " .. self.name)
 
-        ---@param stats any
-        ---@param weapon EdnaFunction
-        function AddWeaponStats(stats, weapon)
-            stats.statWepMaxDmg = stats.statWepMaxDmg + weapon:Get("WepMaxDmg")
-            stats.statWepMinDmg = stats.statWepMinDmg + weapon:Get("WepMinDmg")
-        end
-        
-        ---@param stats any
-        ---@param weapon ItemEdna
-        function AddAutoAttribute(stats, weapon)
+        self.attributes = AttributesContainer:NewDefault()
 
-        end
+        self.attributes.BlockedDamage_Reduction = Coefficients.PlayerBaseBlockedDamageReduction
+        self.attributes.CriticalDamage_Mod = Coefficients.PlayerBaseCritDamageMod
 
-        ---@param stats any
-        ---@param item ItemEdna
-        function AddItemStats(stats, item)
-            stats.statHitRating = stats.statHitRating + item:Get("HitRating")
-            stats.statHeavyRating = stats.statHeavyRating + item:Get("HeavyRating")
-            stats.statAttackPowerRating = stats.statAttackPowerRating + item:Get("AttackPowerRating")
-            stats.statSpecialRating = stats.statSpecialRating + item:Get("SpecialRating")
-            stats.statParryRating = stats.statParryRating + item:Get("ParryRating")
-            stats.statPeneRating = stats.statPeneRating + item:Get("PeneRating")
-            stats.attributeStrength = stats.attributeStrength + item:Get("Strength")
-            stats.statStamina = stats.statStamina + item:Get("Stamina")
-            stats.attributeFocus = stats.attributeFocus + item:Get("Focus")
-            stats.attributeDexterity = stats.attributeDexterity + item:Get("Agility")
-            stats.statCritRating = stats.statCritRating + item:Get("CritHitRating")
-            stats.statCritDmgRating = stats.statCritDmgRating + item:Get("CritDamageRating")
+        -- Compute primary, secondary and stamina attributes
+        self.attributes[self:GetPrimaryStat()] = self:Get("lvl") * 3 + self:Get("lvl")
+        self.attributes[self:GetSecondaryStat()] = self:Get("lvl") * 2 + self:Get("lvl")
+        self.attributes.Stamina = BaseStamina[self:Get("lvl")]
 
+        for _, item in pairs(self:GetEquipment()) do
+            if item.class == "ednaModule" or (item.class == "ednaFunction" and item.placement_guid == self:Get("weapon")[1]) then
+                --[[@cast item ItemEdna]]
+                self.attributes:AddAttributes(item.attributes)
 
-            if item.class == "ednaFunction" then
-                --[[@cast item EdnaFunction]]
-                AddWeaponStats(stats, item)
+                Log.Debug("Adding item " .. item.name .. ". Movement_Mod = " .. self.attributes.Movement_Mod)
+
+                if item.class == "ednaFunction" then
+                    self.attributes:Modify("Add", "WepMaxDmg", item:Get("WepMaxDmg"))
+                    self.attributes:Modify("Add", "WepMinDmg", item:Get("WepMinDmg"))
+                end
             end
         end
 
-        function CalculateBaseAttributes(stats)
-            stats[self:GetPrimaryStat()] = self:Get("lvl") * 3 + self:Get("lvl")
-            stats[self:GetSecondaryStat()] = self:Get("lvl") * 2 + self:Get("lvl")
-            stats.statStamina = BaseStamina[self:Get("lvl")]
+        local buffs = self:GetBuffs() ---@type OaBuff[]
+        for _,buff in pairs(buffs) do
+            self.attributes:AddAttributes(buff.attributes)
+
+            Log.Debug("Adding buff " .. buff.name .. ". Movement_Mod = " .. self.attributes.Movement_Mod)
         end
 
-        function CalculateStats(stats)
-            
-        end
+        self.attributes:Modify("Add", "FinalDamage_Mod", self.attributes.AttackPower / 250)
+        self.attributes:Modify("Add", "FinalHealing_Mod", self.attributes.AttackPower / 250)
+        self.attributes:Modify("Add", "CritRating_Mod", self.attributes.CritRating / 100)
 
-        function CalculateDerived(stats)
-            stats.attributeHealth = stats.statStamina * 10
-            stats.attributeHealthRegen = 0
-            stats.statFinalDamageMod = 1 + stats.statAttackPowerRating / 250
-            stats.statFinalHealingMod = 1 + stats.statAttackPowerRating / 250
-            stats.statCritChance = stats.statCritRating / 100
-        end
-
-        local stats = {
-            statWeaponDPS = 0,
-            statWepMaxDmg = 0,
-            statWepMinDmg = 0,
-            statArmorRating = 0,
-            statHitRating = 0,
-            statHeavyRating = 0,
-            statAttackPowerRating = 0,
-            statSpecialRating = 0,
-            statParryRating = 0,
-            statPeneRating = 0,
-            statStamina = 0,
-            statCritRating = 0,
-            statCritDmgRating = 0,
-            attributeDexterity = 0,
-            attributeStrength = 0,
-            attributeWisdom = 0,
-            attributeHealth = 0,
-            attributeFocus = 0,
-            attributeResilience = 0,
-            attributeEnergy = 0,
-            attributeConstitution = 0,
-            statBlockedDamageMod = 0.5,
-            statCriticalDamageMod = 1.3,
-        }
-
-        CalculateBaseAttributes(stats)
-
-        for _,v in pairs(self:GetEquipment()) do
-            if v.class == "ednaModule" or (v.class == "ednaFunction" and v.placement_guid == self:Get("weapon")[1]) then
-                --[[@cast v ItemEdna]]
-                AddItemStats(stats, v)
-            end
-        end
-
-        CalculateStats(stats)
-        CalculateDerived(stats)
-
-        if stats.attributeHealth <= 0 then
-            Log.Warn("Player:RecalculateStats - Attribute health is 0 or less")
-            stats.attributeHealth = 1
-        end
-
-        for k,v in pairs(stats) do
-            self:Set(k, v)
-        end
-
-        -- Compute hitpoints
-        self:Set("hpMax", self:Get("attributeHealth"))
+        self:Set("hpMax", self.attributes.Stamina * Coefficients.HealthPerStamina)
 
         if self:Get("hpCur") > self:Get("hpMax") then
             self:Set("hpCur", self:Get("hpMax"))
         end
+
+        for k,v in pairs(self.attributes) do 
+            Log.Debug("attr[" .. k .. "] = " .. v)
+        end
+
+        self:Set("moveSpeed", 292.0 * self.attributes.Movement_Mod)
+        Log.Warn("Move Speed: " .. self:Get("moveSpeed"))
+
+        self:Set("statAttackPower", self.attributes.AttackPower)
+        self:Set("statAttackPowerBonus", self.attributes.AttackPower_Mod)
+        self:Set("statHitRating", self.attributes.HitRating)
+        self:Set("statHitChance", self.attributes.Hit_Chance)
+        self:Set("statCritRating", self.attributes.CritRating)
+        self:Set("statCritDmgRating", self.attributes.CritRating_Mod)
+        self:Set("statCritChance", self.attributes.Crit_Chance)
+        self:Set("statBlockRating", self.attributes.BlockRating)
+        self:Set("statBlockChance", self.attributes.Block_Chance)
+        self:Set("statBendRating", self.attributes.BendRating)
+        self:Set("statBendChance", self.attributes.Bend_Chance)
+        self:Set("statReflectRating", self.attributes.ReflectRating)
+        self:Set("statReflectChance", self.attributes.Reflect_Chance)
+        self:Set("statWepMinDmg", self.attributes.WepMinDmg)
+        self:Set("statWepMaxDmg", self.attributes.WepMaxDmg)
+
+        self:Set("statArmorRating", self.attributes.ArmorRating)
+        self:Set("statArmorReduction", self.attributes.Armor_Reduction)
+
+        self:Set("statHeavyEnergyPerHit", self.attributes.HeavyEnergyPerHit_Mod)
+        self:Set("statSpecialEnergyPerHit", self.attributes.SpecialEnergyPerHit_Mod)
+        self:Set("statThreatMod", self.attributes.Threat_Mod)
+        self:Set("statAttackRangePhysAdd", self.attributes.AttackRangePhysAdd)
+
+        self:Set("statHasteClassSkills", self.attributes.ClassSkillCooldown_Reduction)
+        self:Set("statCriticalDamageMod", self.attributes.CriticalDamage_Mod)
+        self:Set("statCriticalChanceReduction", self.attributes.CriticalChance_Reduction)
+        self:Set("statBlockedDamageMod", self.attributes.BlockedDamage_Reduction)
+        self:Set("statFinalDamageMod", self.attributes.FinalDamage_Mod)
+        self:Set("statAnyDmgReduction", self.attributes.AnyDmg_Reduction)
+
+        self:Set("statFinalHealingMod", self.attributes.FinalHealing_Mod)
+        self:Set("statHealingReceivedMod", self.attributes.HealingReceived_Mod)
+        self:Set("statExtraHealthRegen", self.attributes.ExtraHealthRegen)
+
+        self:Set("statAoE_MaxSubTargets", self.attributes.AoE_MaxSubTargets)
+        self:Set("statAoE_SubTargetsDamageMod", self.attributes.AoE_SubTargetsDamage_Scale)
+
+        self:Set("statXpMod", self.attributes.Xp_Mod)
+        self:Set("statFreeFallDistanceMod", self.attributes.FreeFallDistance_Mod)
+        self:Set("statDamagePercPerMeterMod", self.attributes.DamagePercPerMeter_Mod)
+        self:Set("statTCMax", self.attributes.ExtraSomaCapacity)
 
         --attributeAttackPowerPhys
         --attributeAttackPowerSpell
@@ -725,6 +718,50 @@ function Player:CastAbility(ability, request)
 
     if ability:Get("usableWithRangedWeapon") then
         -- todo
+    end
+
+    local needBuffGroupsToExecute = ability:Get("needBuffGroupsToExecute") --[[@as ContentRef[] ]]
+    if #needBuffGroupsToExecute then
+        local buffs = self:GetBuffs()
+        local buffGroups = {}
+
+        for _, buff in pairs(buffs) do
+            local buffGroup = buff:Get("buffGroup") --[[@as ContentRef?]]
+            if buffGroup then
+                buffGroups[buffGroup.id] = true
+            end
+        end
+
+        for _, v in pairs(needBuffGroupsToExecute) do
+            if not buffGroups[v.id] then
+                Log.Debug("Player:CastAbility - Missing buff group: " .. v)
+                return false
+            end
+        end
+    end
+
+    local removeActiveBuffGroupsAndQuit = ability:Get("removeActiveBuffGroupsAndQuit") --[[@as ContentRef[] ]]
+    if #removeActiveBuffGroupsAndQuit then
+        local buffs = self:GetBuffs()
+        local removed = false
+
+        for _, buff in pairs(buffs) do
+            local buffGroup = buff:Get("buffGroup") --[[@as ContentRef?]]
+            if buffGroup then
+                for _, removeGroup in pairs(removeActiveBuffGroupsAndQuit) do
+                    if removeGroup.id == buffGroup.id then
+                        buff:Expire()
+                        removed = true
+                    end
+
+                end
+            end
+        end
+
+        if removed then
+            Log.Debug("Player:CastAbility - Stopping execution due to remove active buffs.")
+            return false
+        end
     end
 
     --- Check target prerequisites
@@ -1097,40 +1134,40 @@ end
 ---@return string
 function Player:GetPrimaryStat()
     if self:Get("combatStyle") == 0 then
-        return "attributeStrength"
+        return "Strength"
     elseif self:Get("combatStyle") == 1 then
-        return "attributeDexterity"
+        return "Dexterity"
     elseif self:Get("combatStyle") == 2 then
-        return "attributeDexterity"
+        return "Dexterity"
     elseif self:Get("combatStyle") == 3 then
-        return "attributeFocus"
+        return "Focus"
     end
 
     -- Fallback
-    return "attributeStrength"
+    return "Strength"
 end
 
 ---@return string
 function Player:GetSecondaryStat()
     if self:Get("combatStyle") == 0 then
-        return "attributeDexterity"
+        return "Dexterity"
     elseif self:Get("combatStyle") == 1 then
-        return "attributeFocus"
+        return "Focus"
     elseif self:Get("combatStyle") == 2 then
-        return "attributeStrength"
+        return "Strength"
     elseif self:Get("combatStyle") == 3 then
-        return "attributeDexterity"
+        return "Dexterity"
     end
 
     -- Fallback
-    return "attributeDexterity"
+    return "Dexterity"
 end
 
 ---@return number
 function Player:GetBaseDamage()
     return 
-        self:Get(self:GetPrimaryStat()) * 0.5 + 
-        self:Get(self:GetSecondaryStat()) * 0.5
+        self.attributes[self:GetPrimaryStat()] * 0.5 + 
+        self.attributes[self:GetSecondaryStat()] * 0.5
 end
 
 ---@return number, number
